@@ -1092,6 +1092,10 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
         render time from the source tables or, for the validation anchor, read from the
         recorded CPI release. Nothing is typed in by hand. The build script, the cached
         series and the calls ledger sit beside this file.</p>
+        <h3 class="lbl" style="margin-top:26px">More</h3>
+        <p class="disclaim" style="margin-top:12px"><a href="aimag.html">Aimag price monitor</a>
+        — the same survey across all 21 aimags (working demo) ·
+        <a href="capability.html">Capability note</a> — extensions and institutional work.</p>
       </div>
     </div>
   </div>

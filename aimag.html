@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nowflation.mn — aimag price monitor (working demo)</title>
+<meta name="description" content="Weekly NSO food and fuel prices across all 21 Mongolian
+ aimags — beef, petrol, diesel and baled hay by region, against Ulaanbaatar. A working demo
+ of the aimag extension of nowflation.mn.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{--bg:#0A0A0A;--surface:#141414;--surface-hi:#1c1b1b;
+    --text:#F5F5F5;--dim:#888888;--line:#262626;--teal:#4fe8e2;
+    --red:#ffb3ad;--amber:#ffc8a1;
+    --sans:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace}
+  html,body{margin:0;padding:0}
+  h1,h2{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:var(--teal);text-decoration:none} a:hover{text-decoration:underline}
+  .lbl{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--dim)}
+  header.mast{border-bottom:1px solid var(--line);background:var(--surface)}
+  .mast-in{display:flex;flex-wrap:wrap;gap:16px;align-items:baseline;
+    justify-content:space-between;padding:18px 0}
+  .brand{font-size:20px;font-weight:800;letter-spacing:-.03em}
+  .brand span{color:var(--teal)}
+  .badge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;padding:5px 9px;border:1px solid var(--line);color:var(--dim)}
+  section{padding:44px 0}
+  .demo-note{border-left:4px solid var(--teal);background:var(--surface);
+    padding:14px 20px;margin-bottom:28px;font-size:15px;line-height:1.65}
+  .spreadline{margin:0 0 24px;font-size:16px;line-height:1.6;color:#cfd9d8;max-width:70ch}
+  .panel{border:1px solid var(--line);background:var(--surface);overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:680px}
+  caption{caption-side:top;text-align:left;padding:14px 16px;
+    border-bottom:1px solid var(--line)}
+  th{text-align:left;padding:12px 14px;background:var(--surface-hi);
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;
+    font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+  td{padding:11px 14px;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:none}
+  tr.region td{background:var(--surface-hi);font-family:var(--mono);font-size:11px;
+    font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+  .hero-row{background:var(--surface-hi)}
+  .item-en{font-weight:600;font-size:14px}
+  td.num{font-family:var(--mono);font-size:14px;white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .unit{color:var(--dim);font-size:10px;margin-left:4px}
+  footer{padding:36px 0 60px;background:#0e0e0e;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.8}
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap mast-in">
+    <div>
+      <h1 class="brand">NOWFLATION<span>.MN</span> <span class="lbl">/ aimag monitor</span></h1>
+      <div class="lbl" style="margin-top:4px"><a href="./">← back to the nowcast</a></div>
+    </div>
+    <div>
+      <span class="badge">Data week 2026-07-20</span>
+      <span class="badge">2 days old</span>
+      <span class="badge">live</span>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="wrap">
+  <div class="demo-note">This page is a <b>working demo</b> of the aimag extension: the same
+    weekly NSO survey, read across all 21 aimags — beef, petrol, diesel and baled hay
+    (<span lang="mn">боодолтой өвс</span>, the herder staple that matters in a dzud winter).
+    Custom builds on this data — full baskets, chosen aimags, early-warning thresholds,
+    delivery as a feed — are what we do. <a href="capability.html">Details here.</a></div>
+  <h2 class="lbl" style="margin-bottom:14px">Weekly prices by aimag · week 2026-07-20</h2>
+  <p class="spreadline">Beef, bone-in this week: cheapest in <b lang="mn">Увс</b> at ₮24,000, dearest in <b lang="mn">Өмнөговь</b> at ₮37,500 — a 56% spread across the country for the same cut.</p>
+  <div class="panel">
+    <table>
+      <caption class="lbl">Beef bone-in ₮/kg (with YoY) · A-92 ₮/L · diesel ₮/L · hay ₮/bale (with YoY)</caption>
+      <thead><tr>
+        <th scope="col">Aimag · <span lang="mn">Аймаг</span></th>
+        <th scope="col">Beef, bone-in</th><th scope="col">Petrol A-92</th>
+        <th scope="col">Diesel</th><th scope="col">Baled hay</th>
+      </tr></thead>
+      <tbody><tr class="hero-row"><td><div class="item-en">Улаанбаатар <span class="unit">(UB survey, DT_NSO_0600_001V4)</span></div></td><td class="num">₮33,685</td><td class="num">₮2,840</td><td class="num">₮4,185</td><td class="num">—</td></tr><tr class="region"><td colspan="5" lang="mn">Баруун бүс · West</td></tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Баян-Өлгий</div></td>
+        <td class="num">₮25,000 <span class="unit">+78.6%</span></td>
+        <td class="num">₮3,417</td>
+        <td class="num">₮4,540</td>
+        <td class="num">₮17,000 <span class="unit">+70.0%</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Говь-Алтай</div></td>
+        <td class="num">₮25,000 <span class="unit">+38.9%</span></td>
+        <td class="num">₮3,235</td>
+        <td class="num">₮4,686</td>
+        <td class="num">₮15,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Завхан</div></td>
+        <td class="num">₮26,000 <span class="unit">+62.5%</span></td>
+        <td class="num">₮3,260</td>
+        <td class="num">₮4,833</td>
+        <td class="num">₮18,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Увс</div></td>
+        <td class="num">₮24,000 <span class="unit">+53.2%</span></td>
+        <td class="num">₮3,333</td>
+        <td class="num">₮4,610</td>
+        <td class="num">₮22,500 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Ховд</div></td>
+        <td class="num">₮27,000 <span class="unit">+50.0%</span></td>
+        <td class="num">₮3,405</td>
+        <td class="num">₮4,710</td>
+        <td class="num">₮10,000 <span class="unit">+42.9%</span></td>
+      </tr><tr class="region"><td colspan="5" lang="mn">Хангайн бүс · Khangai</td></tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Архангай</div></td>
+        <td class="num">₮25,662 <span class="unit">+48.1%</span></td>
+        <td class="num">₮2,945</td>
+        <td class="num">₮4,453</td>
+        <td class="num">₮10,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Баянхонгор</div></td>
+        <td class="num">₮25,000 <span class="unit">+47.1%</span></td>
+        <td class="num">₮2,980</td>
+        <td class="num">₮4,523</td>
+        <td class="num">₮17,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Булган</div></td>
+        <td class="num">₮27,663 <span class="unit">+49.5%</span></td>
+        <td class="num">₮2,972</td>
+        <td class="num">₮4,429</td>
+        <td class="num">₮14,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Орхон</div></td>
+        <td class="num">₮29,166 <span class="unit">+68.3%</span></td>
+        <td class="num">₮2,941</td>
+        <td class="num">₮4,399</td>
+        <td class="num">₮15,000 <span class="unit">+0.0%</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Өвөрхангай</div></td>
+        <td class="num">₮28,000 <span class="unit">+33.3%</span></td>
+        <td class="num">₮2,922</td>
+        <td class="num">₮4,443</td>
+        <td class="num">₮13,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Хөвсгөл</div></td>
+        <td class="num">₮27,000 <span class="unit">+58.8%</span></td>
+        <td class="num">₮3,042</td>
+        <td class="num">₮4,486</td>
+        <td class="num">₮17,000 <span class="unit">—</span></td>
+      </tr><tr class="region"><td colspan="5" lang="mn">Төвийн бүс · Central</td></tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Говьсүмбэр</div></td>
+        <td class="num">₮27,000 <span class="unit">+50.0%</span></td>
+        <td class="num">₮2,932</td>
+        <td class="num">₮4,477</td>
+        <td class="num">₮10,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Дархан-Уул</div></td>
+        <td class="num">₮26,662 <span class="unit">+28.0%</span></td>
+        <td class="num">₮2,919</td>
+        <td class="num">₮4,369</td>
+        <td class="num">— <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Дорноговь</div></td>
+        <td class="num">₮30,000 <span class="unit">+40.6%</span></td>
+        <td class="num">₮2,973</td>
+        <td class="num">₮4,557</td>
+        <td class="num">₮12,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Дундговь</div></td>
+        <td class="num">₮27,000 <span class="unit">+35.0%</span></td>
+        <td class="num">₮2,982</td>
+        <td class="num">₮4,516</td>
+        <td class="num">₮5,000 <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Өмнөговь</div></td>
+        <td class="num">₮37,500 <span class="unit">—</span></td>
+        <td class="num">₮3,002</td>
+        <td class="num">₮4,493</td>
+        <td class="num">— <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Сэлэнгэ</div></td>
+        <td class="num">₮25,000 <span class="unit">+42.9%</span></td>
+        <td class="num">₮2,951</td>
+        <td class="num">₮4,455</td>
+        <td class="num">— <span class="unit">—</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Төв</div></td>
+        <td class="num">₮29,000 <span class="unit">+70.6%</span></td>
+        <td class="num">₮2,847</td>
+        <td class="num">₮4,218</td>
+        <td class="num">₮11,000 <span class="unit">—</span></td>
+      </tr><tr class="region"><td colspan="5" lang="mn">Зүүн бүс · East</td></tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Дорнод</div></td>
+        <td class="num">₮28,000 <span class="unit">+40.0%</span></td>
+        <td class="num">₮2,983</td>
+        <td class="num">₮4,467</td>
+        <td class="num">₮6,000 <span class="unit">+140.0%</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Сүхбаатар</div></td>
+        <td class="num">₮28,000 <span class="unit">+55.6%</span></td>
+        <td class="num">₮3,022</td>
+        <td class="num">₮4,530</td>
+        <td class="num">₮5,000 <span class="unit">+25.0%</span></td>
+      </tr>
+      <tr>
+        <td><div class="item-en" lang="mn">Хэнтий</div></td>
+        <td class="num">₮34,000 <span class="unit">+58.2%</span></td>
+        <td class="num">₮2,973</td>
+        <td class="num">₮4,483</td>
+        <td class="num">₮7,000 <span class="unit">—</span></td>
+      </tr></tbody>
+    </table>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    Source: National Statistics Office of Mongolia, weekly aimag price survey, PXWeb table
+    DT_NSO_0300_010V5 (data.1212.mn), CC BY 4.0 · Ulaanbaatar row from table
+    DT_NSO_0600_001V4 · Rendered 2026-07-22 · Missing cells are weeks the survey
+    did not report for that aimag — shown as gaps, never interpolated.
+  </div>
+</footer>
+</body>
+</html>

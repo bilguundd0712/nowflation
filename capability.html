@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nowflation.mn — data capability note</title>
+<meta name="description" content="What nowflation.mn is, how it is built, and what can be
+ built on it: aimag price dashboards, full-basket monitors, early-warning feeds and
+ methodology work on Mongolian NSO open data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{--bg:#0A0A0A;--surface:#141414;--surface-hi:#1c1b1b;--text:#F5F5F5;--dim:#888888;
+    --line:#262626;--teal:#4fe8e2;--sans:'Inter',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;--serif:'Source Serif 4',Georgia,serif}
+  html,body{margin:0;padding:0}
+  h1,h2,h3{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6}
+  .wrap{max-width:820px;margin:0 auto;padding:0 24px}
+  a{color:var(--teal);text-decoration:none} a:hover{text-decoration:underline}
+  .lbl{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--dim)}
+  header.mast{border-bottom:1px solid var(--line);background:var(--surface)}
+  .mast-in{display:flex;flex-wrap:wrap;gap:16px;align-items:baseline;
+    justify-content:space-between;padding:18px 0}
+  .brand{font-size:20px;font-weight:800;letter-spacing:-.03em}
+  .brand span{color:var(--teal)}
+  section{padding:40px 0;border-bottom:1px solid var(--line)}
+  h2.lbl{margin-bottom:14px}
+  p{margin:0 0 14px;max-width:70ch;color:#d9dedd}
+  ul{margin:0 0 14px;padding-left:22px;color:#d9dedd}
+  li{margin-bottom:8px;max-width:68ch}
+  .quiet{color:var(--dim);font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .card{border:1px solid var(--line);background:var(--surface);padding:18px 20px}
+  .card h3{font-size:15px;font-weight:700;margin-bottom:8px}
+  .card p{font-size:13.5px;color:var(--dim);margin:0}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}}
+  footer{padding:36px 0 60px;font-family:var(--mono);font-size:12px;color:var(--dim);
+    line-height:1.8}
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap mast-in">
+    <h1 class="brand">NOWFLATION<span>.MN</span> <span class="lbl">/ capability note</span></h1>
+    <div class="lbl"><a href="./">← the nowcast</a> · <a href="aimag.html">aimag demo</a></div>
+  </div>
+</header>
+
+<main>
+<section class="wrap">
+  <h2 class="lbl">What this is</h2>
+  <p>Nowflation.mn is an independent weekly read of Mongolian food and fuel prices, computed
+  from the National Statistics Office's own open weekly price survey and published ahead of
+  each monthly CPI print. Every figure is generated from the source tables at build time —
+  nothing is entered by hand — and every prediction we publish is dated, banded and graded
+  in public against the official release
+  (<a href="calls_ledger.json">the append-only calls ledger</a>).</p>
+  <p class="quiet">It is a nowcast, not an official statistic. It does not replace the NSO
+  consumer price index and makes no claim to reproduce it.</p>
+</section>
+
+<section class="wrap">
+  <h2 class="lbl">What already runs</h2>
+  <ul>
+    <li><a href="./">The UB nowcast</a> — meat basket, flour and fuel, weekly, with
+      year-on-year, four-survey momentum, and the lead over the official print visualised.</li>
+    <li><a href="aimag.html">The aimag monitor (working demo)</a> — the same survey across
+      all 21 aimags: beef, petrol, diesel and baled hay, against Ulaanbaatar. In the latest
+      week the same cut of beef varies more than 50% between aimags.</li>
+    <li><a href="calls_ledger.json">The scored-calls ledger</a> — every food-CPI prediction
+      dated before the release, graded automatically after it, never edited. The git history
+      of the <a href="https://github.com/bilguundd0712/nowflation">public repository</a>
+      is the tamper-evidence.</li>
+  </ul>
+</section>
+
+<section class="wrap">
+  <h2 class="lbl">What can be built on it</h2>
+  <div class="grid">
+    <div class="card"><h3>Aimag price dashboards</h3>
+      <p>Any basket, any aimags, any cadence — from the weekly survey that already covers
+      all 21 aimags. Delivered as a page, a feed, or both.</p></div>
+    <div class="card"><h3>Early-warning monitors</h3>
+      <p>Threshold-based alerts on the series that matter in a hard winter — baled hay,
+      meat, flour, fuel — with honest staleness rules and no interpolation.</p></div>
+    <div class="card"><h3>Full-basket builds</h3>
+      <p>The UB survey carries 31 products (dairy, vegetables, bread, eggs); the national
+      CPI tables carry every CoICOP group monthly back to 1993. Custom cuts on request.</p></div>
+    <div class="card"><h3>Methodology &amp; validation work</h3>
+      <p>Documented, reproducible pipelines on official open data, validated against the
+      official prints — the discipline this site runs on, applied to your series.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2 class="lbl">How we work</h2>
+  <ul>
+    <li>All source data is NSO open data (data.1212.mn, PXWeb), licensed CC BY 4.0 and
+      attributed on every page.</li>
+    <li>Builds are deterministic and public where the deliverable is public; failed fetches
+      degrade to cache and say so — a stale page that admits it beats a fresh-looking one.</li>
+    <li>Claims are falsifiable by design: predictions carry bands and grade themselves
+      against the official number.</li>
+  </ul>
+</section>
+
+<section class="wrap">
+  <h2 class="lbl">Contact</h2>
+  <p>Open an issue on the
+  <a href="https://github.com/bilguundd0712/nowflation/issues">GitHub repository</a> with a
+  short description of what you need, and we will respond there.</p>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">Data: © National Statistics Office of Mongolia, CC BY 4.0, via
+  data.1212.mn · This note describes capability on open data; it is not an offer of
+  investment advice or an official statistical service.</div>
+</footer>
+</body>
+</html>
