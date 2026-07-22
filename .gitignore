@@ -1,0 +1,4 @@
+MONETIZATION_VERDICT.md
+__pycache__/
+*.pyc
+.vercel/

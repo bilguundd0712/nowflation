@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nowflation.mn — Mongolian food prices, weekly, ahead of the CPI</title>
+<meta name="description" content="A weekly nowcast of Ulaanbaatar food prices from the NSO price
+ survey. Meat basket +63.2% year on year as of week 2026-07-20 — published 2 weeks ahead of the official CPI print.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#0A0A0A; --surface:#141414; --surface-hi:#1c1b1b;
+    --text:#F5F5F5; --dim:#888888; --line:#262626;
+    --teal:#4fe8e2; --teal-deep:#1fccc6; --red:#ffb3ad;
+    --red-bg:#a40217; --amber:#ffc8a1;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+    --serif:'Source Serif 4',Georgia,serif;
+  }
+  html,body{margin:0;padding:0}
+  h1,h2,h3{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+  a{color:var(--teal);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .mono{font-family:var(--mono)}
+  .lbl{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--dim)}
+
+  /* masthead — a page, not an app: no sidebar, no fake nav */
+  header.mast{border-bottom:1px solid var(--line);background:var(--surface)}
+  .mast-in{display:flex;flex-wrap:wrap;gap:16px;align-items:baseline;
+    justify-content:space-between;padding:18px 0}
+  .brand{font-size:22px;font-weight:800;letter-spacing:-.03em}
+  .brand span{color:var(--teal)}
+  .cadence{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .badge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;padding:5px 9px;border:1px solid var(--line);color:var(--dim)}
+  .badge.ok{border-color:var(--teal-deep);color:var(--teal)}
+  .badge.stale{border-color:var(--amber);color:var(--amber)}
+
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+
+  /* hero */
+  .hero-top{display:flex;flex-wrap:wrap;gap:48px;align-items:flex-end}
+  .hero-l{flex:1 1 460px;min-width:300px}
+  .kicker{margin-bottom:14px}
+  .kicker .mn{color:var(--dim);text-transform:none;letter-spacing:.02em}
+  .big{font-size:clamp(72px,13vw,150px);font-weight:800;letter-spacing:-.05em;
+    line-height:.86;color:var(--teal);font-variant-numeric:tabular-nums}
+  /* the hero is DATA, not brand — it takes the severity colour, same scale as the chips */
+  .big.red{color:var(--red)}
+  .big.amber{color:var(--amber)}
+  .big-sub{margin-top:12px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dim)}
+  .anchors{display:flex;gap:36px;border-left:1px solid var(--line);padding-left:28px}
+  .anchor-l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+  .anchor-v{font-size:34px;font-weight:700;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums}
+  .anchor-note{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--dim);
+    letter-spacing:.06em;text-transform:uppercase}
+  .verdict{margin-top:40px;max-width:760px;border-left:4px solid var(--teal);
+    padding:6px 0 6px 22px;font-family:var(--serif);font-style:italic;font-size:21px;
+    line-height:1.55;color:#cfd9d8}
+
+  /* the momentum contrast — level vs impulse, the reason the page exists */
+  .contrast{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
+    background:var(--surface)}
+  .contrast > div{padding:26px}
+  .contrast > div + div{border-left:1px solid var(--line)}
+  .cv{font-size:46px;font-weight:800;letter-spacing:-.03em;line-height:1;
+    font-variant-numeric:tabular-nums;margin:10px 0 4px}
+  .cv.level{color:var(--red)}
+  .cv.imp.cool{color:var(--teal)}
+  .cv.imp.warm{color:var(--amber)}
+  .cv.imp.hot{color:var(--red)}
+  .cdesc{font-size:14px;color:var(--dim);max-width:44ch}
+  .readout{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--text)}
+
+  /* charts */
+  .panel{border:1px solid var(--line);background:var(--surface)}
+  .panel-h{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;
+    align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .panel-b{padding:18px 20px;overflow-x:auto}
+  .panel-b .chart{min-width:760px}
+  .scrollx{overflow-x:auto}
+  .scrollx .chart{min-width:430px}
+  .chart{display:block;width:100%;height:auto}
+  .chart .ax{font-family:var(--mono);font-size:12px;fill:#888888}
+  .chart .lead{fill:#4fe8e2;letter-spacing:.12em}
+  .chart .tag{font-family:var(--mono);font-size:12px;font-weight:700;fill:#00201f}
+  .legend{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .legend i{display:inline-block;width:14px;height:2px;background:var(--teal);
+    margin-right:7px;vertical-align:middle}
+  .legend i.zone{height:10px;background:rgba(79,232,226,.16);
+    border-left:1px dashed var(--teal)}
+
+  /* table */
+  table{width:100%;border-collapse:collapse}
+  caption{caption-side:top;text-align:left;padding:14px 16px;
+    border-bottom:1px solid var(--line)}
+  th{text-align:left;padding:13px 16px;background:var(--surface-hi);
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;
+    font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+  td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .hero-row{background:var(--surface-hi)}
+  .hero-row .item-en{color:var(--teal)}
+  .item-en{font-weight:600;font-size:15px}
+  .item-mn{font-size:12px;color:var(--dim);margin-top:2px}
+  td.num{font-family:var(--mono);font-size:16px;font-weight:500;white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  td.num.sub{font-size:13px;color:var(--dim)}
+  .unit{color:var(--dim);font-size:10px;margin-left:3px}
+  .chip{display:inline-block;padding:4px 8px;border:1px solid;font-family:var(--mono);
+    font-size:10px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+  .chip.red{color:#ffdad6;background:var(--red-bg);border-color:var(--red-bg)}
+  .chip.amber{color:var(--amber);border-color:var(--amber)}
+  .chip.teal{color:var(--teal);border-color:var(--teal)}
+  .chip.dim{color:var(--dim);border-color:var(--line)}
+  .spark{width:104px;height:28px;display:block}
+  .sparkcell{width:120px}
+  .tnote{padding:14px 16px;border-top:1px solid var(--line);font-family:var(--mono);
+    font-size:11px;color:var(--dim);line-height:1.7}
+
+  /* provenance */
+  footer{padding:44px 0 64px;background:#0e0e0e;border-top:1px solid var(--line)}
+  .prov{display:grid;grid-template-columns:1.35fr 1fr;gap:44px}
+  .prov dl{margin:14px 0 0;font-family:var(--mono);font-size:12px;line-height:1.85;
+    color:var(--dim)}
+  .prov dt{color:var(--text);display:inline;font-weight:500}
+  .prov dd{display:inline;margin:0}
+  .prov dd::after{content:"";display:block}
+  .disclaim{margin-top:22px;font-size:12px;color:var(--dim);max-width:60ch;line-height:1.7}
+
+  @media(max-width:860px){
+    .contrast{grid-template-columns:1fr}
+    .contrast > div + div{border-left:none;border-top:1px solid var(--line)}
+    .prov{grid-template-columns:1fr;gap:28px}
+    .anchors{border-left:none;padding-left:0;gap:28px}
+    section{padding:38px 0}
+    td,th{padding:12px 10px}
+    .sparkcell{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap mast-in">
+    <div>
+      <h1 class="brand">NOWFLATION<span>.MN</span></h1>
+      <div class="lbl" style="margin-top:4px">Ulaanbaatar food prices · weekly · ahead of the CPI</div>
+    </div>
+    <div class="cadence">
+      <span class="badge stale">Cached · live fetch failed</span>
+      <span class="badge">Data week 2026-07-20</span>
+      <span class="badge">2 days old</span>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="wrap">
+  <div class="hero-top">
+    <div class="hero-l">
+      <h2 class="kicker lbl">UB meat basket · year on year<br>
+        <span class="mn" lang="mn">Улаанбаатар · махны сагс · өмнөх оноос</span></h2>
+      <div class="big red">+63.2%</div>
+      <div class="big-sub">Beef, mutton and goat · NSO weekly survey · week 2026-07-20</div>
+    </div>
+    <div>
+      <div class="anchors"><div class="anchor"><div class="anchor-l">Official food CPI · YoY</div><div class="anchor-v">24.8%</div></div><div class="anchor"><div class="anchor-l">Headline CPI · YoY</div><div class="anchor-v">12.0%</div></div></div>
+      <div class="anchor-note">Last official print · 2026-06 · NSO table DT_NSO_0600_010V1</div>
+    </div>
+  </div>
+  <p class="verdict">"The level remains elevated while momentum runs mildly positive — the transmission has slowed but not stopped."</p>
+</section>
+
+<section class="wrap">
+  <h2 class="lbl" style="margin-bottom:16px">Level versus impulse · read the momentum, not the level</h2>
+  <div class="contrast">
+    <div>
+      <h3 class="lbl">Level · year on year</h3>
+      <div class="cv level">+63.2%</div>
+      <div class="cdesc">Where prices sit against a year ago. Stays high on base effects long
+        after the shock itself has passed.</div>
+      <div class="readout">STATUS: SEVERE — board gate: amber &gt;25% · red &gt;40%</div>
+    </div>
+    <div>
+      <h3 class="lbl">Impulse · last 4 surveys · 35 days</h3>
+      <div class="cv imp warm">+2.8%</div>
+      <div class="cdesc">What prices are doing right now. This is the number that turns first —
+        the bars below are the last 26 surveys of it.</div>
+      <div class="scrollx" style="margin-top:14px"><svg viewBox="0 0 560 150" class="chart" role="img" aria-label="4-week momentum of the meat basket, last 26 weeks"><line x1="40" x2="546" y1="111.7" y2="111.7" stroke="#888888" stroke-dasharray="2,3" opacity="0.7"/><text x="32" y="115.7" class="ax" text-anchor="end">0%</text><text x="32" y="22" class="ax" text-anchor="end">20%</text><rect x="34.6" y="72.7" width="10.7" height="39.0" fill="#ffb3ad" opacity="0.85"/><rect x="54.9" y="68.3" width="10.7" height="43.5" fill="#ffb3ad" opacity="0.85"/><rect x="75.1" y="66.3" width="10.7" height="45.5" fill="#ffb3ad" opacity="0.85"/><rect x="95.4" y="73.2" width="10.7" height="38.5" fill="#ffb3ad" opacity="0.85"/><rect x="115.6" y="84.2" width="10.7" height="27.5" fill="#ffb3ad" opacity="0.85"/><rect x="135.8" y="92.7" width="10.7" height="19.0" fill="#ffb3ad" opacity="0.85"/><rect x="156.1" y="91.7" width="10.7" height="20.0" fill="#ffb3ad" opacity="0.85"/><rect x="176.3" y="81.2" width="10.7" height="30.5" fill="#ffb3ad" opacity="0.85"/><rect x="196.6" y="78.2" width="10.7" height="33.5" fill="#ffb3ad" opacity="0.85"/><rect x="216.8" y="75.2" width="10.7" height="36.5" fill="#ffb3ad" opacity="0.85"/><rect x="237.0" y="81.2" width="10.7" height="30.5" fill="#ffb3ad" opacity="0.85"/><rect x="257.3" y="72.7" width="10.7" height="39.0" fill="#ffb3ad" opacity="0.85"/><rect x="277.5" y="69.3" width="10.7" height="42.5" fill="#ffb3ad" opacity="0.85"/><rect x="297.8" y="64.3" width="10.7" height="47.5" fill="#ffb3ad" opacity="0.85"/><rect x="318.0" y="30.3" width="10.7" height="81.4" fill="#ffb3ad" opacity="0.85"/><rect x="338.2" y="40.8" width="10.7" height="70.9" fill="#ffb3ad" opacity="0.85"/><rect x="358.5" y="50.3" width="10.7" height="61.4" fill="#ffb3ad" opacity="0.85"/><rect x="378.7" y="46.8" width="10.7" height="64.9" fill="#ffb3ad" opacity="0.85"/><rect x="399.0" y="75.2" width="10.7" height="36.5" fill="#ffb3ad" opacity="0.85"/><rect x="419.2" y="70.8" width="10.7" height="41.0" fill="#ffb3ad" opacity="0.85"/><rect x="439.4" y="77.7" width="10.7" height="34.0" fill="#ffb3ad" opacity="0.85"/><rect x="459.7" y="92.7" width="10.7" height="19.0" fill="#ffb3ad" opacity="0.85"/><rect x="479.9" y="93.7" width="10.7" height="18.0" fill="#ffb3ad" opacity="0.85"/><rect x="500.2" y="110.7" width="10.7" height="1.0" fill="#1fccc6" opacity="0.85"/><rect x="520.4" y="101.7" width="10.7" height="10.0" fill="#1fccc6" opacity="0.85"/><rect x="540.6" y="97.7" width="10.7" height="14.0" fill="#1fccc6" opacity="0.85"/><text x="40" y="144" class="ax">26-01</text><text x="546" y="144" class="ax" text-anchor="end">26-07</text></svg></div>
+      <div class="readout">READING: STILL RUNNING — slowed, not stopped</div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="panel">
+    <div class="panel-h">
+      <h2 class="lbl">Beef, boneless · ₮/kg · weekly · 2025-06-09 → 2026-07-20</h2>
+      <div class="legend lbl">
+        <span><i></i>NSO weekly survey</span>
+        <span><i class="zone"></i>Ahead of the official print</span>
+      </div>
+    </div>
+    <div class="panel-b"><svg viewBox="0 0 1180 340" class="chart" role="img" aria-label="Weekly UB price, beef_boneless, 2025-06-09 to 2026-07-20"><line x1="62" x2="1088" y1="18.0" y2="18.0" stroke="#262626" stroke-dasharray="2,3"/><text x="52" y="22.0" class="ax" text-anchor="end">₮41.3K</text><line x1="62" x2="1088" y1="90.0" y2="90.0" stroke="#262626" stroke-dasharray="2,3"/><text x="52" y="94.0" class="ax" text-anchor="end">₮36.2K</text><line x1="62" x2="1088" y1="162.0" y2="162.0" stroke="#262626" stroke-dasharray="2,3"/><text x="52" y="166.0" class="ax" text-anchor="end">₮31.2K</text><line x1="62" x2="1088" y1="234.0" y2="234.0" stroke="#262626" stroke-dasharray="2,3"/><text x="52" y="238.0" class="ax" text-anchor="end">₮26.1K</text><line x1="62" x2="1088" y1="306.0" y2="306.0" stroke="#262626" stroke-dasharray="2,3"/><text x="52" y="310.0" class="ax" text-anchor="end">₮21.1K</text><rect x="1050.7" y="18" width="37.3" height="288" fill="#4fe8e2" opacity="0.05"/><line x1="1050.7" x2="1050.7" y1="18" y2="306" stroke="#4fe8e2" stroke-dasharray="3,3" opacity="0.5"/><text x="1042.7" y="294" class="ax lead" text-anchor="end">2 WEEKS AHEAD OF THE CPI ▶</text><polyline points="62.0,259.8 80.7,256.2 99.3,254.3 118.0,255.4 136.6,255.4 155.3,256.3 173.9,256.3 192.6,259.6 211.2,263.3 229.9,261.9 248.5,259.3 267.2,257.5 285.9,256.9 304.5,257.5 323.2,260.6 341.8,263.6 360.5,261.7 379.1,260.6 397.8,259.4 416.4,261.2 435.1,262.0 453.7,262.7 472.4,267.9 491.1,267.6 509.7,267.0 528.4,261.2 547.0,251.0 565.7,244.4 584.3,238.9 603.0,233.0 621.6,218.8 640.3,208.3 658.9,203.3 677.6,199.9 696.3,194.2 714.9,193.4 733.6,188.1 752.2,184.4 770.9,176.4 789.5,173.0 808.2,166.3 826.8,153.0 845.5,140.0 864.1,124.7 882.8,111.9 901.5,101.5 920.1,95.6 938.8,83.9 957.4,77.7 976.1,67.3 994.7,61.9 1013.4,63.2 1032.0,56.1 1050.7,56.6 1069.3,57.8 1088.0,57.8" fill="none" stroke="#4fe8e2" stroke-width="2"/><rect x="1086.0" y="55.8" width="5" height="5" fill="#4fe8e2"/><rect x="1096.0" y="44.8" width="80" height="24" fill="#4fe8e2"/><text x="1136.0" y="60.8" class="tag" text-anchor="middle">₮38,504</text><text x="62.0" y="328" class="ax" text-anchor="middle">25·06</text><text x="323.2" y="328" class="ax" text-anchor="middle">25·09</text><text x="584.3" y="328" class="ax" text-anchor="middle">25·12</text><text x="845.5" y="328" class="ax" text-anchor="middle">26·04</text><text x="1088.0" y="328" class="ax" text-anchor="middle">26·07</text></svg></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="panel">
+    <table>
+      <caption class="lbl">The basket · week 2026-07-20</caption>
+      <thead><tr>
+        <th scope="col">Item · <span lang="mn">Бараа</span></th><th scope="col">Price</th>
+        <th scope="col">Last 4 surveys</th><th scope="col">Year on year</th>
+        <th scope="col" class="sparkcell">13-week trend</th>
+      </tr></thead>
+      <tbody>
+      <tr class="hero-row">
+        <td>
+          <div class="item-en">Beef, boneless</div>
+          <div class="item-mn" lang="mn">Үхрийн мах, ясгүй</div>
+        </td>
+        <td class="num">₮38,504<span class="unit">/KG</span></td>
+        <td class="num sub">+1.0%</td>
+        <td><span class="chip red">SEVERE +56.3%</span></td>
+        <td class="sparkcell"><svg viewBox="0 0 104 28" class="spark"><polyline points="1.0,23.2 9.5,19.7 18.0,16.9 26.5,15.4 35.0,12.3 43.5,10.6 52.0,7.8 60.5,6.4 69.0,6.7 77.5,4.8 86.0,5.0 94.5,5.3 103.0,5.3" fill="none" stroke="#888888" stroke-width="1.5"/></svg></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="item-en">Beef, bone-in</div>
+          <div class="item-mn" lang="mn">Үхрийн мах, ястай</div>
+        </td>
+        <td class="num">₮33,685<span class="unit">/KG</span></td>
+        <td class="num sub">-0.6%</td>
+        <td><span class="chip red">SEVERE +57.1%</span></td>
+        <td class="sparkcell"><svg viewBox="0 0 104 28" class="spark"><polyline points="1.0,23.2 9.5,19.8 18.0,17.6 26.5,16.6 35.0,14.3 43.5,11.4 52.0,6.5 60.5,6.0 69.0,6.0 77.5,4.8 86.0,6.0 94.5,6.4 103.0,6.7" fill="none" stroke="#888888" stroke-width="1.5"/></svg></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="item-en">Mutton</div>
+          <div class="item-mn" lang="mn">Хонины мах</div>
+        </td>
+        <td class="num">₮27,798<span class="unit">/KG</span></td>
+        <td class="num sub">+1.4%</td>
+        <td><span class="chip red">SEVERE +63.8%</span></td>
+        <td class="sparkcell"><svg viewBox="0 0 104 28" class="spark"><polyline points="1.0,23.2 9.5,21.3 18.0,16.6 26.5,15.2 35.0,13.4 43.5,14.1 52.0,6.3 60.5,5.5 69.0,8.2 77.5,4.8 86.0,5.9 94.5,6.2 103.0,5.2" fill="none" stroke="#888888" stroke-width="1.5"/></svg></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="item-en">Goat</div>
+          <div class="item-mn" lang="mn">Ямааны мах</div>
+        </td>
+        <td class="num">₮22,420<span class="unit">/KG</span></td>
+        <td class="num sub">+9.4%</td>
+        <td><span class="chip red">SEVERE +75.5%</span></td>
+        <td class="sparkcell"><svg viewBox="0 0 104 28" class="spark"><polyline points="1.0,23.2 9.5,13.2 18.0,12.4 26.5,12.4 35.0,10.7 43.5,7.8 52.0,6.9 60.5,9.1 69.0,10.0 77.5,7.8 86.0,7.8 94.5,4.8 103.0,4.8" fill="none" stroke="#888888" stroke-width="1.5"/></svg></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="item-en">Flour, grade I</div>
+          <div class="item-mn" lang="mn">Гурил, I зэрэг</div>
+        </td>
+        <td class="num">₮2,521<span class="unit">/KG</span></td>
+        <td class="num sub">+0.6%</td>
+        <td><span class="chip teal">CONTAINED +8.0%</span></td>
+        <td class="sparkcell"><svg viewBox="0 0 104 28" class="spark"><polyline points="1.0,21.9 9.5,21.9 18.0,21.9 26.5,21.9 35.0,21.9 43.5,21.9 52.0,23.2 60.5,23.2 69.0,23.2 77.5,4.8 86.0,4.8 94.5,4.8 103.0,4.8" fill="none" stroke="#888888" stroke-width="1.5"/></svg></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="item-en">Petrol A-92</div>
+          <div class="item-mn" lang="mn">Бензин А-92</div>
+        </td>
+        <td class="num">₮2,840<span class="unit">/L</span></td>
+        <td class="num sub">+9.7%</td>
+        <td><span class="chip teal">CONTAINED +9.7%</span></td>
+        <td class="sparkcell"><svg viewBox="0 0 104 28" class="spark"><polyline points="1.0,23.2 9.5,23.2 18.0,23.2 26.5,23.2 35.0,23.2 43.5,23.2 52.0,23.2 60.5,23.2 69.0,23.2 77.5,23.2 86.0,23.2 94.5,23.2 103.0,4.8" fill="none" stroke="#888888" stroke-width="1.5"/></svg></td>
+      </tr></tbody>
+    </table>
+    <div class="tnote">
+      Severity gates: contained ≤25% · elevated &gt;25% ·
+      severe &gt;40% year on year.
+      The headline basket is the mean of the four meat series; flour and petrol are shown as
+      context and are not in it.
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2 class="lbl" style="margin-bottom:16px">Scored calls · dated before the print, graded after it</h2>
+  <div class="panel">
+    <table>
+      <caption class="lbl">Predictions of the official food-CPI print · append-only ledger</caption>
+      <thead><tr>
+        <th scope="col">Made</th><th scope="col">Target</th>
+        <th scope="col">Call · food CPI YoY</th><th scope="col">Official</th>
+        <th scope="col">Error</th><th scope="col">Verdict</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td class="num sub">2026-07-22</td>
+        <td><div class="item-en">2026-07 print</div>
+            <div class="item-mn">2 survey weeks observed</div></td>
+        <td class="num">+24.4% <span class="unit">± 3.8</span></td>
+        <td class="num"><span class="unit">due 2026-08-10</span></td>
+        <td class="num sub">—</td>
+        <td><span class="chip dim">OPEN</span></td>
+      </tr></tbody>
+    </table>
+    <div class="tnote">
+      A call is never edited after it is made — grading only appends the official figure from
+      the same NSO table the prediction targets. Raw ledger:
+      <a href="calls_ledger.json">calls_ledger.json</a>.
+      Latest method: OLS food-YoY ~ meat-basket-YoY over 30 months since 2024-01 (R²=0.84, RMSE=1.9pp); band = max(1, 2×RMSE); made with 2 survey weeks of the target month observed.
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h2 class="lbl" style="color:var(--teal)">Provenance</h2>
+    <div class="prov">
+      <div>
+        <dl>
+          <dt>Source ·</dt><dd> National Statistics Office of Mongolia, weekly Ulaanbaatar
+            price survey, PXWeb table DT_NSO_0600_001V4; official monthly CPI by group,
+            table DT_NSO_0600_010V1, base 2023=100 (both data.1212.mn)</dd>
+          <dt>Data week ·</dt><dd> 2026-07-20 — 2 days old at render</dd>
+          <dt>Cadence ·</dt><dd> weekly reference periods, published on the statistics
+            office's own schedule; gaps around public holidays are real, not missing data</dd>
+          <dt>Method ·</dt><dd> year on year against the last surveyed week on or before the
+            same date one year earlier; impulse is the change across the preceding four
+            surveys, currently spanning 35 days; the
+            basket is the unweighted mean of beef bone-in, beef boneless, mutton and goat</dd>
+          <dt>Validation ·</dt><dd> mean of the 5 weekly beef observations in 2026-06 (₮38,275) against the official CPI report's UB beef average for that month (₮38,274) — a 0.002% difference</dd>
+          <dt>Calls ·</dt><dd> the scored-calls ledger is append-only — every prediction is dated and banded before the print and graded automatically from the same NSO table after it</dd>
+          <dt>Rendered ·</dt><dd> 2026-07-22; weekly survey from cache — the live fetch failed; official CPI table from cache</dd>
+        </dl>
+        <p class="disclaim">This is a nowcast, not an official statistic. It tracks a narrow
+        basket of Ulaanbaatar retail prices and is published ahead of, and independently of,
+        the National Statistics Office consumer price index. It does not replace the CPI and
+        makes no claim to reproduce it.</p>
+      </div>
+      <div>
+        <h3 class="lbl">Why it leads</h3>
+        <p class="disclaim" style="margin-top:12px">These prices are surveyed weekly; the
+        consumer price index is published monthly. On the chart above,
+        the shaded band is the 2 weeks of price data the last official print does not yet contain — the next print is due 2026-08-10.</p>
+        <h3 class="lbl" style="margin-top:26px">Reproduce it</h3>
+        <p class="disclaim" style="margin-top:12px">Every figure on this page is computed at
+        render time from the source tables or, for the validation anchor, read from the
+        recorded CPI release. Nothing is typed in by hand. The build script, the cached
+        series and the calls ledger sit beside this file.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

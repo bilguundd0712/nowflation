@@ -1,0 +1,18 @@
+[
+ {
+  "id": "2026-07#w2",
+  "made_on": "2026-07-22",
+  "target_month": "2026-07",
+  "metric": "official food CPI YoY, national (Хүнсний бараа, ундаа, ус), NSO DT_NSO_0600_010V1, base 2023=100",
+  "expected_release": "2026-08-10",
+  "weeks_observed": [
+   "2026-07-06",
+   "2026-07-20"
+  ],
+  "our_basket_yoy_partial": 63.3,
+  "predicted": 24.4,
+  "band": 3.8,
+  "method": "OLS food-YoY ~ meat-basket-YoY over 30 months since 2024-01 (R²=0.84, RMSE=1.9pp); band = max(1, 2×RMSE); made with 2 survey weeks of the target month observed",
+  "status": "open"
+ }
+]
