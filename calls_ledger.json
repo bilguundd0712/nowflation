@@ -14,5 +14,15 @@
   "band": 3.8,
   "method": "OLS food-YoY ~ meat-basket-YoY over 30 months since 2024-01 (R²=0.84, RMSE=1.9pp); band = max(1, 2×RMSE); made with 2 survey weeks of the target month observed",
   "status": "open"
+ },
+ {
+  "id": "note-2026-07-22-method-withdrawn",
+  "type": "methodology_note",
+  "made_on": "2026-07-22",
+  "headline": "New calls suspended — the method failed its own backtest",
+  "detail": "A walk-forward backtest over 42 official prints, audited by five independent adversarial reviews, found that this calibrated forecast is 25-64% worse than naive persistence (simply repeating the last published print), and that a specification which nests persistence gives the weekly basket a coefficient of 0.004-0.05 — a tie. Correlation with the official print peaks contemporaneously (0.916) and decays with lead, so the series co-moves with the CPI rather than leading it. The published R-squared of 0.84 was co-trending inside the 2024-2026 livestock shock: fitted walk-forward, the slope has median +0.013 and is negative in 48% of refits. No new calibrated calls will be issued until a specification beats persistence out of sample.",
+  "open_calls_unaffected": "Calls already made are NOT withdrawn or edited. This ledger is append-only; the open 2026-07 call grades on schedule against the official release, and this note is dated before that grading.",
+  "band_caveat": "The +/-3.8pp band on the open call was derived from in-sample RMSE and is not a calibrated 95% interval — realised out-of-sample coverage is 38%. It is also wide relative to persistence's own error, so a HIT on that call should not be read as evidence the method works.",
+  "report": "BACKTEST_FINDINGS.md"
  }
 ]

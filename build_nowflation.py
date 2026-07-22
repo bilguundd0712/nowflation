@@ -71,6 +71,14 @@ PRICE_BOUNDS = {"flour_I": (1000, 8000), "mutton": (8000, 90000), "beef_bone_in"
 # administered fuel prices move in steps, and the step IS the news.
 FUEL_STEP_CALLOUT_PCT = 3.0
 
+# 2026-07-22: a walk-forward backtest over 42 official prints, plus five adversarial reviews,
+# found the calibrated forecast loses to naive persistence and that the weekly basket adds
+# nothing once the last released print is in the model (see BACKTEST_FINDINGS.md). New calls
+# are suspended until a specification beats persistence out of sample. Open calls STILL GRADE —
+# the ledger is append-only and a made call is never withdrawn.
+CALLS_SUSPENDED = True
+SUSPENSION_NOTE_ID = "note-2026-07-22-method-withdrawn"
+
 # The board's own gates for ub_meat_nowcast_yoy — reused so the page and the board never disagree.
 AMBER_ABOVE, RED_ABOVE = 25.0, 40.0
 
@@ -282,8 +290,9 @@ def update_ledger(series: dict, official: dict, cal: dict | None,
     every vintage kept and graded.
     """
     ledger = json.loads(LEDGER.read_text(encoding="utf-8")) if LEDGER.exists() else []
+    calls = [c for c in ledger if c.get("type") != "methodology_note"]
 
-    for call in ledger:
+    for call in calls:
         tm = call["target_month"]
         if call["status"] == "open" and tm in official and "food" in official[tm]:
             call["official_value"] = official[tm]["food"]
@@ -292,12 +301,45 @@ def update_ledger(series: dict, official: dict, cal: dict | None,
             call["graded_on"] = today.isoformat()
             call["status"] = "graded"
 
+    if CALLS_SUSPENDED:
+        if not any(c.get("id") == SUSPENSION_NOTE_ID for c in ledger):
+            ledger.append({
+                "id": SUSPENSION_NOTE_ID,
+                "type": "methodology_note",
+                "made_on": today.isoformat(),
+                "headline": "New calls suspended — the method failed its own backtest",
+                "detail": (
+                    "A walk-forward backtest over 42 official prints, audited by five "
+                    "independent adversarial reviews, found that this calibrated forecast is "
+                    "25-64% worse than naive persistence (simply repeating the last published "
+                    "print), and that a specification which nests persistence gives the weekly "
+                    "basket a coefficient of 0.004-0.05 — a tie. Correlation with the official "
+                    "print peaks contemporaneously (0.916) and decays with lead, so the series "
+                    "co-moves with the CPI rather than leading it. The published R-squared of "
+                    "0.84 was co-trending inside the 2024-2026 livestock shock: fitted "
+                    "walk-forward, the slope has median +0.013 and is negative in 48% of "
+                    "refits. No new calibrated calls will be issued until a specification "
+                    "beats persistence out of sample."),
+                "open_calls_unaffected": (
+                    "Calls already made are NOT withdrawn or edited. This ledger is "
+                    "append-only; the open 2026-07 call grades on schedule against the "
+                    "official release, and this note is dated before that grading."),
+                "band_caveat": (
+                    "The +/-3.8pp band on the open call was derived from in-sample RMSE and is "
+                    "not a calibrated 95% interval — realised out-of-sample coverage is 38%. "
+                    "It is also wide relative to persistence's own error, so a HIT on that call "
+                    "should not be read as evidence the method works."),
+                "report": "BACKTEST_FINDINGS.md",
+            })
+        LEDGER.write_text(json.dumps(ledger, ensure_ascii=False, indent=1), encoding="utf-8")
+        return ledger
+
     if official and cal:
         latest = max(m for m in official if "food" in official[m])
         target = month_next(latest)
         wobs = [w for w in sorted(series["beef_boneless"]) if w[:7] == target]
         ours, n_ours = basket_month_stats(series, target)
-        prior = [c for c in ledger if c["target_month"] == target]
+        prior = [c for c in calls if c["target_month"] == target]
         max_seen = max((len(c["weeks_observed"]) for c in prior), default=0)
         if ours is not None and n_ours > max_seen:
             band = max(1.0, round(2 * cal["rmse"], 1))
@@ -445,7 +487,8 @@ def price_chart(series: dict, key: str, cpi_asof: str | None, w=1180, h=340,
                          f'stroke="{C["teal"]}" stroke-dasharray="3,3" opacity="0.5"/>')
             # The band is usually only a week or two wide, so the label cannot live inside it.
             # Park it in the empty lower-left and point into the band.
-            label = f"{len(ahead)} WEEK{'' if len(ahead) == 1 else 'S'} AHEAD OF THE CPI ▶"
+            label = (f"{len(ahead)} WEEK{'' if len(ahead) == 1 else 'S'} "
+                     f"NOT YET IN THE OFFICIAL PRINT ▶")
             zone_w = ml + pw - x_start
             if zone_w > len(label) * 6.2:  # comfortably fits inside the band
                 parts.append(f'<text x="{x_start + zone_w/2:.1f}" y="{mt+ph-12}" '
@@ -647,8 +690,8 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
                  if len(weeks) >= 5 else None)
 
     if lead_weeks:
-        meta_lead = (f" — published {lead_weeks} week{'s' if lead_weeks != 1 else ''} "
-                     f"ahead of the official CPI print")
+        meta_lead = (f" — {lead_weeks} survey week{'s' if lead_weeks != 1 else ''} "
+                     f"more recent than the last official print")
         why_leads = (f"the shaded band is the {lead_weeks} week"
                      f"{'s' if lead_weeks != 1 else ''} of price data the last official "
                      f"print does not yet contain")
@@ -740,7 +783,9 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
 
     # Scored calls — newest vintage first. The section appears once the first call exists.
     lrows = []
-    for c in sorted(ledger, key=lambda c: (c["target_month"], len(c["weeks_observed"])),
+    note = next((c for c in ledger if c.get("type") == "methodology_note"), None)
+    for c in sorted([c for c in ledger if c.get("type") != "methodology_note"],
+                    key=lambda c: (c["target_month"], len(c["weeks_observed"])),
                     reverse=True):
         nw = len(c["weeks_observed"])
         if c["status"] == "graded":
@@ -762,9 +807,19 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
         <td class="num sub">{err_cell}</td>
         <td><span class="chip {chip_cls}">{chip_txt}</span></td>
       </tr>""")
+    note_html = "" if not note else f"""
+  <div class="callout" style="border-left-color:var(--red)">
+    <b>{note['headline']}</b> — {note['made_on']}<br>{note['detail']}
+    <br><br><b>Calls already made are not withdrawn.</b> {note['open_calls_unaffected']}
+    <br><br>{note['band_caveat']}
+    <br><br>Full write-up, including an error we made in our own first audit and had to
+    correct: <a href="{note['report']}">{note['report']}</a> ·
+    <a href="https://github.com/bilguundd0712/nowflation/blob/main/backtest.py">backtest.py</a>
+  </div>"""
     ledger_section = "" if not lrows else f"""
 <section class="wrap">
   <h2 class="lbl" style="margin-bottom:16px">Scored calls · dated before the print, graded after it</h2>
+  {note_html}
   <div class="panel">
     <table>
       <caption class="lbl">Predictions of the official food-CPI print · append-only ledger</caption>
@@ -779,7 +834,7 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
       A call is never edited after it is made — grading only appends the official figure from
       the same NSO table the prediction targets. Raw ledger:
       <a href="calls_ledger.json">calls_ledger.json</a>.
-      Latest method: {ledger[-1]['method']}.
+      Method of the last call issued: {lrows and next(c for c in ledger if c.get('type') != 'methodology_note')['method']}.
     </div>
   </div>
 </section>"""
@@ -789,7 +844,7 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nowflation.mn — Mongolian food and fuel prices, weekly, ahead of the CPI</title>
+<title>Nowflation.mn — Mongolian food and fuel prices, measured weekly</title>
 <meta name="description" content="A weekly nowcast of Ulaanbaatar food and fuel prices from the NSO price
  survey. Meat basket {pct(yoy)} year on year as of week {as_of}{meta_lead}.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -944,7 +999,7 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
   <div class="wrap mast-in">
     <div>
       <h1 class="brand">NOWFLATION<span>.MN</span></h1>
-      <div class="lbl" style="margin-top:4px">Ulaanbaatar food &amp; fuel prices · weekly · ahead of the CPI</div>
+      <div class="lbl" style="margin-top:4px">Ulaanbaatar food &amp; fuel prices · measured weekly, not forecast</div>
     </div>
     <div class="cadence">
       <span class="badge {badge_cls}">{badge_txt}</span>
@@ -1086,10 +1141,14 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
         makes no claim to reproduce it.</p>
       </div>
       <div>
-        <h3 class="lbl">Why it leads</h3>
-        <p class="disclaim" style="margin-top:12px">These prices are surveyed weekly; the
-        consumer price index is published monthly. On the chart above,
-        {why_leads}{'' if not next_print else f' — the next print is due {next_print}'}.</p>
+        <h3 class="lbl">What this claims — and what it doesn't</h3>
+        <p class="disclaim" style="margin-top:12px"><b>It claims measurement, not prediction.</b>
+        These prices are surveyed weekly; the consumer price index is published monthly, so
+        on the chart above {why_leads}{'' if not next_print else f' — the next print is due {next_print}'}.
+        That is a calendar advantage, and it is real. It is <b>not</b> a forecast: we tested
+        whether this series predicts the official print and found it does not — correlation
+        peaks contemporaneously and decays with lead, so it moves <i>with</i> food CPI rather
+        than ahead of it. See <a href="BACKTEST_FINDINGS.md">BACKTEST_FINDINGS.md</a>.</p>
         <h3 class="lbl" style="margin-top:26px">Reproduce it</h3>
         <p class="disclaim" style="margin-top:12px">Every figure on this page is computed at
         render time from the source tables or, for the validation anchor, read from the
@@ -1151,6 +1210,9 @@ def main() -> None:
     else:
         print("build: calibration insufficient (<6 month pairs) — no call made")
     for c in ledger:
+        if c.get("type") == "methodology_note":
+            print(f"  NOTE {c['id']} ({c['made_on']}): {c['headline']}")
+            continue
         tail = (f"official {c['official_value']:+.1f}%, err {c['error']:+.1f}pp — "
                 f"{'HIT' if c['hit'] else 'MISS'}" if c["status"] == "graded"
                 else f"grades at the {c.get('expected_release') or 'next'} release")
