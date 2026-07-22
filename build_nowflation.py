@@ -57,26 +57,35 @@ URL = ("https://data.1212.mn/api/v1/mn/NSO/" + urllib.parse.quote("Economy, envi
 # grades against.
 OFFICIAL_URL = ("https://data.1212.mn/api/v1/mn/NSO/" + urllib.parse.quote("Economy, environment")
                 + "/" + urllib.parse.quote("Consumer Price Index") + "/DT_NSO_0600_010V1.px")
-OFFICIAL_BASE, OFFICIAL_GROUPS = "2", {"0": "headline", "1": "food"}
+OFFICIAL_BASE, OFFICIAL_GROUPS = "2", {"0": "headline", "1": "food", "7": "transport"}
 CHART_WEEKS = 56  # display window of the price chart; the fetch reaches further for calibration
 
 ITEMS = {"3": "flour_I", "9": "mutton", "10": "beef_bone_in", "11": "beef_boneless",
-         "13": "goat", "30": "a92"}
+         "13": "goat", "29": "a80", "30": "a92", "31": "diesel"}
 MEAT = ["beef_bone_in", "beef_boneless", "mutton", "goat"]
+FUEL = ["a92", "diesel", "a80"]
 PRICE_BOUNDS = {"flour_I": (1000, 8000), "mutton": (8000, 90000), "beef_bone_in": (8000, 90000),
-                "beef_boneless": (10000, 110000), "goat": (5000, 80000), "a92": (1500, 6000)}
+                "beef_boneless": (10000, 110000), "goat": (5000, 80000),
+                "a80": (1200, 6000), "a92": (1500, 6000), "diesel": (1500, 8000)}
+# A survey-to-survey move at or above this threshold gets called out in the fuel section —
+# administered fuel prices move in steps, and the step IS the news.
+FUEL_STEP_CALLOUT_PCT = 3.0
 
 # The board's own gates for ub_meat_nowcast_yoy — reused so the page and the board never disagree.
 AMBER_ABOVE, RED_ABOVE = 25.0, 40.0
 
-# Display order and bilingual labels. Unit is per kg except petrol (litre).
+# Display order and bilingual labels. Food table (per kg) and fuel section (per litre).
 DISPLAY = [
     ("beef_boneless", "Beef, boneless", "Үхрийн мах, ясгүй", "KG"),
     ("beef_bone_in", "Beef, bone-in", "Үхрийн мах, ястай", "KG"),
     ("mutton", "Mutton", "Хонины мах", "KG"),
     ("goat", "Goat", "Ямааны мах", "KG"),
     ("flour_I", "Flour, grade I", "Гурил, I зэрэг", "KG"),
-    ("a92", "Petrol A-92", "Бензин А-92", "L"),
+]
+FUEL_DISPLAY = [
+    ("a92", "Petrol A-92", "АИ-92 автобензин", "L"),
+    ("diesel", "Diesel", "Дизелийн түлш", "L"),
+    ("a80", "Petrol A-80", "АИ-80 автобензин", "L"),
 ]
 
 C = {  # Sovereign Ledger palette
@@ -495,6 +504,57 @@ def momentum_chart(track: list[tuple[str, float]], w=560, h=150) -> str:
     return "".join(p)
 
 
+def last_step(s: dict) -> dict | None:
+    """Change between the two most recent surveys of one item — administered fuel prices
+    move in steps, so the step itself is reported, with its true span in days."""
+    ds = sorted(s)
+    if len(ds) < 2:
+        return None
+    prev, last = ds[-2], ds[-1]
+    days = (datetime.strptime(last, "%Y-%m-%d") - datetime.strptime(prev, "%Y-%m-%d")).days
+    return {"pct": round(100 * (s[last] / s[prev] - 1), 1), "days": days,
+            "prev_d": prev, "last_d": last, "prev_p": s[prev], "last_p": s[last]}
+
+
+def fuel_chart(series: dict, keys=("a92", "diesel"), w=1180, h=300,
+               window: int = CHART_WEEKS) -> str:
+    """A-92 and diesel on one panel, shared scale, tagged line ends."""
+    colors = {"a92": C["teal"], "diesel": C["amber"]}
+    common = sorted(set(series[keys[0]]) & set(series[keys[1]]))[-window:]
+    if len(common) < 2:
+        return ""
+    allv = [series[k][d] for k in keys for d in common]
+    lo, hi = min(allv), max(allv)
+    pad = (hi - lo) * 0.18 or 1
+    lo, hi = lo - pad, hi + pad
+    ml, mr, mt, mb = 62, 110, 18, 34
+    pw, ph = w - ml - mr, h - mt - mb
+    parts = [f'<svg viewBox="0 0 {w} {h}" class="chart" role="img" '
+             f'aria-label="Weekly UB fuel prices, {common[0]} to {common[-1]}">']
+    for i in range(5):
+        y = mt + ph * i / 4
+        v = hi - (hi - lo) * i / 4
+        parts.append(f'<line x1="{ml}" x2="{ml+pw}" y1="{y:.1f}" y2="{y:.1f}" '
+                     f'stroke="{C["line"]}" stroke-dasharray="2,3"/>')
+        parts.append(f'<text x="{ml-10}" y="{y+4:.1f}" class="ax" text-anchor="end">'
+                     f'₮{fmt(v)}</text>')
+    for key in keys:
+        vals = [series[key][d] for d in common]
+        pts = _pts(vals, ml, mt, pw, ph, lo, hi)
+        poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+        parts.append(f'<polyline points="{poly}" fill="none" stroke="{colors[key]}" '
+                     f'stroke-width="2"/>')
+        lx, ly = pts[-1]
+        parts.append(f'<text x="{lx+10:.1f}" y="{ly+4:.1f}" class="ax" '
+                     f'style="fill:{colors[key]}">{key.upper()} ₮{fmt(vals[-1])}</text>')
+    for i in (0, len(common) // 2, len(common) - 1):
+        x = ml + pw * (i / (len(common) - 1))
+        parts.append(f'<text x="{x:.1f}" y="{h-12}" class="ax" text-anchor="middle">'
+                     f'{common[i][2:7].replace("-", "·")}</text>')
+    parts.append("</svg>")
+    return "".join(parts)
+
+
 def spark(s: dict, weeks: int = 13, w=104, h=28) -> str:
     ds = sorted(s)[-weeks:]
     vals = [s[d] for d in ds]
@@ -515,9 +575,11 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
 
     # Anchors come from the NSO monthly table itself when available — the board is the
     # fallback and still supplies the next-print date and the validation beef anchor.
+    off_transport = None
     if official:
         om = max(m for m in official if official[m])
         off_head, off_food = official[om].get("headline"), official[om].get("food")
+        off_transport = official[om].get("transport")
         cpi_asof = month_end(om)
         anchor_note_txt = f"Last official print · {om} · NSO table DT_NSO_0600_010V1"
     else:
@@ -616,6 +678,36 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
         <td class="sparkcell">{spark(series[key])}</td>
       </tr>""")
 
+    # Fuel: table rows, and a callout whenever a survey-to-survey step clears the threshold.
+    frows, jumps = [], []
+    for key, en, mnn, unit in FUEL_DISPLAY:
+        if key not in m:
+            continue
+        d = m[key]
+        st = last_step(series[key])
+        s_lab, s_col = severity(d["yoy"])
+        step_cell = (f'{st["pct"]:+.1f}% <span class="unit">/ {st["days"]}d</span>'
+                     if st else "—")
+        if st and abs(st["pct"]) >= FUEL_STEP_CALLOUT_PCT:
+            jumps.append(f"{en} moved {st['pct']:+.1f}% in one survey step — "
+                         f"₮{fmt(st['prev_p'])} → ₮{fmt(st['last_p'])} per litre across "
+                         f"{st['days']} days ({st['prev_d']} → {st['last_d']})")
+        frows.append(f"""
+      <tr{' class="hero-row"' if key == "a92" else ''}>
+        <td>
+          <div class="item-en">{en}</div>
+          <div class="item-mn" lang="mn">{mnn}</div>
+        </td>
+        <td class="num">₮{fmt(d['price'])}<span class="unit">/{unit}</span></td>
+        <td class="num sub">{step_cell}</td>
+        <td><span class="chip {s_col}">{s_lab} {pct(d['yoy'])}</span></td>
+        <td class="sparkcell">{spark(series[key])}</td>
+      </tr>""")
+    fuel_callout = ("" if not jumps else
+                    '<div class="callout">' + "<br>".join(jumps) + "</div>")
+    transport_note = (f", currently {pct(off_transport)} year on year"
+                      if off_transport is not None else "")
+
     anchors = ""
     if off_food is not None:
         anchors += (f'<div class="anchor"><div class="anchor-l">Official food CPI · YoY</div>'
@@ -697,8 +789,8 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nowflation.mn — Mongolian food prices, weekly, ahead of the CPI</title>
-<meta name="description" content="A weekly nowcast of Ulaanbaatar food prices from the NSO price
+<title>Nowflation.mn — Mongolian food and fuel prices, weekly, ahead of the CPI</title>
+<meta name="description" content="A weekly nowcast of Ulaanbaatar food and fuel prices from the NSO price
  survey. Meat basket {pct(yoy)} year on year as of week {as_of}{meta_lead}.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -761,6 +853,8 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
   .verdict{{margin-top:40px;max-width:760px;border-left:4px solid var(--teal);
     padding:6px 0 6px 22px;font-family:var(--serif);font-style:italic;font-size:21px;
     line-height:1.55;color:#cfd9d8}}
+  .callout{{border-left:4px solid var(--amber);background:var(--surface);
+    padding:14px 20px;margin-bottom:16px;font-size:15px;line-height:1.65}}
 
   /* the momentum contrast — level vs impulse, the reason the page exists */
   .contrast{{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
@@ -850,7 +944,7 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
   <div class="wrap mast-in">
     <div>
       <h1 class="brand">NOWFLATION<span>.MN</span></h1>
-      <div class="lbl" style="margin-top:4px">Ulaanbaatar food prices · weekly · ahead of the CPI</div>
+      <div class="lbl" style="margin-top:4px">Ulaanbaatar food &amp; fuel prices · weekly · ahead of the CPI</div>
     </div>
     <div class="cadence">
       <span class="badge {badge_cls}">{badge_txt}</span>
@@ -925,8 +1019,38 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
     <div class="tnote">
       Severity gates: contained ≤{AMBER_ABOVE:.0f}% · elevated &gt;{AMBER_ABOVE:.0f}% ·
       severe &gt;{RED_ABOVE:.0f}% year on year.
-      The headline basket is the mean of the four meat series; flour and petrol are shown as
-      context and are not in it.
+      The headline basket is the mean of the four meat series; flour is shown as context and
+      is not in it.
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2 class="lbl" style="margin-bottom:16px">Fuel · Шатахуун · the administered price that moves in steps</h2>
+  {fuel_callout}
+  <div class="panel">
+    <div class="panel-h">
+      <h3 class="lbl">A-92 &amp; diesel · ₮/L · weekly</h3>
+      <div class="legend lbl">
+        <span><i></i>A-92</span>
+        <span><i style="background:var(--amber)"></i>Diesel</span>
+      </div>
+    </div>
+    <div class="panel-b">{fuel_chart(series)}</div>
+    <table>
+      <thead><tr>
+        <th scope="col">Item · <span lang="mn">Бараа</span></th><th scope="col">Price</th>
+        <th scope="col">Last survey step</th><th scope="col">Year on year</th>
+        <th scope="col" class="sparkcell">13-week trend</th>
+      </tr></thead>
+      <tbody>{''.join(frows)}</tbody>
+    </table>
+    <div class="tnote">
+      Fuel is outside the meat basket and the food group; its official counterpart is the
+      transport group of the CPI (<span lang="mn">Тээвэр</span>){transport_note} — fuel
+      prices feed it alongside vehicles and fares. Retail fuel is administered, so it moves
+      in discrete steps; any step of {FUEL_STEP_CALLOUT_PCT:.0f}% or more between two
+      surveys is called out above.
     </div>
   </div>
 </section>
@@ -1004,7 +1128,7 @@ def main() -> None:
     print(f"build: wrote {OUT} ({len(html):,} bytes) — data week {weeks[-1]}, "
           f"{'live' if live else 'CACHED'}")
     print("build: verification — every figure below must appear on the page")
-    for key, en, _, unit in DISPLAY:
+    for key, en, _, unit in DISPLAY + FUEL_DISPLAY:
         if key in series:
             s = series[key]
             d = sorted(s)[-1]
