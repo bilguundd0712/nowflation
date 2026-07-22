@@ -27,4 +27,7 @@ This is a nowcast, not an official statistic. It tracks a narrow basket of Ulaan
 retail prices, is published independently of the National Statistics Office, does not
 replace the consumer price index, and makes no claim to reproduce it.
 
+The name is a nod to [nowflation.com](https://nowflation.com), Steven Fiorillo's daily US
+inflation gauge, which inspired this project — the two are otherwise unrelated.
+
 Data: © National Statistics Office of Mongolia, CC BY 4.0, via data.1212.mn.

@@ -1075,6 +1075,9 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
             basket is the unweighted mean of beef bone-in, beef boneless, mutton and goat</dd>
           {validation_row}
           {'<dt>Calls ·</dt><dd> the scored-calls ledger is append-only — every prediction is dated and banded before the print and graded automatically from the same NSO table after it</dd>' if ledger else ''}
+          <dt>Namesake ·</dt><dd> the name nods to <a href="https://nowflation.com">nowflation.com</a>,
+            Steven Fiorillo's daily US inflation gauge, which inspired this page — the two
+            projects are otherwise unrelated</dd>
           <dt>Rendered ·</dt><dd> {today.isoformat()}; weekly survey {'live' if live else 'from cache — the live fetch failed'}; official CPI table {'live' if official_live else 'from cache'}</dd>
         </dl>
         <p class="disclaim">This is a nowcast, not an official statistic. It tracks a narrow
