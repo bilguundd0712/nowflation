@@ -1,6 +1,12 @@
 MONETIZATION_VERDICT.md
 OUTREACH_CHECKLIST.md
 TESTS.md
+# Backtest of our own method — held private pending an explicit publish decision.
+# Publishing is a one-line change: delete these four entries and commit.
+backtest.py
+backtest_results.json
+backtest_weekly_cache.json
+backtest_official_cache.json
 __pycache__/
 *.pyc
 .vercel/
