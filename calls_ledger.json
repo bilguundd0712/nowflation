@@ -13,7 +13,11 @@
   "predicted": 24.4,
   "band": 3.8,
   "method": "OLS food-YoY ~ meat-basket-YoY over 30 months since 2024-01 (R²=0.84, RMSE=1.9pp); band = max(1, 2×RMSE); made with 2 survey weeks of the target month observed",
-  "status": "open"
+  "status": "graded",
+  "official_value": 25.5,
+  "error": 1.1,
+  "hit": true,
+  "graded_on": "2026-08-11"
  },
  {
   "id": "note-2026-07-22-method-withdrawn",
