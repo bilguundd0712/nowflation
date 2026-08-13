@@ -70,6 +70,27 @@ URL = ("https://data.1212.mn/api/v1/mn/NSO/" + urllib.parse.quote("Economy, envi
 OFFICIAL_URL = ("https://data.1212.mn/api/v1/mn/NSO/" + urllib.parse.quote("Economy, environment")
                 + "/" + urllib.parse.quote("Consumer Price Index") + "/DT_NSO_0600_010V1.px")
 OFFICIAL_BASE, OFFICIAL_GROUPS = "2", {"0": "headline", "1": "food", "7": "transport"}
+
+# Ulaanbaatar CITY CPI by group — the right anchor for a survey of Ulaanbaatar prices, which
+# is what this page publishes. Same 14 COICOP groups, but this table names its base variable
+# 'Үзүүлэлт' (by label, e.g. '2023=100') rather than 'Суурь он' (by index). Added 2026-08-13:
+# the page had been anchoring UB prices against the NATIONAL food index, which was the wrong
+# comparable — UB food ran 25.8% in 2026-07 against the national 25.5%.
+UB_URL = ("https://data.1212.mn/api/v1/mn/NSO/" + urllib.parse.quote("Economy, environment")
+          + "/" + urllib.parse.quote("Consumer Price Index") + "/DT_NSO_0600_012V1.px")
+UB_BASE_LABEL = "2023=100"
+UB_CACHE = BASE / "official_ub_cache.json"
+
+# The official WEIGHTED meat index is not in the open API — the Bank of Mongolia computes it
+# from NSO data for its monthly inflation note. Carried as a dated, attributed external
+# reference so the page can state plainly how our unweighted basket compares to it.
+MEAT_REFERENCE = {
+    "month": "2026-07", "yoy_pct": 54.0,
+    "source": "Bank of Mongolia monthly inflation note, 12 Aug 2026 (BoM calculation on NSO "
+              "data): meat and meat products +54.0% YoY, fuel +20.2% YoY contributing 1.2pp "
+              "of the 13.0% headline",
+}
+
 CHART_WEEKS = 56  # display window of the price chart; the fetch reaches further for calibration
 
 ITEMS = {"3": "flour_I", "9": "mutton", "10": "beef_bone_in", "11": "beef_boneless",
@@ -213,6 +234,48 @@ def load_official(allow_fetch: bool = True) -> tuple[dict, bool]:
     if OFFICIAL_CACHE.exists():
         return json.loads(OFFICIAL_CACHE.read_text(encoding="utf-8")), False
     return {}, False
+
+
+def fetch_ub(months: int = 24) -> dict:
+    """Ulaanbaatar city CPI YoY by group — {'2026-07': {'headline': 13.0, 'food': 25.8}, ...}."""
+    meta = requests.get(UB_URL, timeout=40).json()
+    bv = next(v for v in meta["variables"] if v["code"] == "Үзүүлэлт")
+    base = next((c for c, t in zip(bv["values"], bv["valueTexts"]) if t == UB_BASE_LABEL),
+                bv["values"][-1])
+    tv = next(v for v in meta["variables"] if v["code"] == "Сар")
+    labels = dict(zip(tv["values"], tv["valueTexts"]))
+    body = {"query": [
+        {"code": "Үзүүлэлт", "selection": {"filter": "item", "values": [base]}},
+        {"code": "Бүлэг", "selection": {"filter": "item", "values": ["0", "1"]}},
+        {"code": "Сар", "selection": {"filter": "item", "values": tv["values"][:months]}},
+    ], "response": {"format": "json"}}
+    r = requests.post(UB_URL, json=body, timeout=60)
+    r.raise_for_status()
+    out: dict = {}
+    for row in r.json()["data"]:
+        grp = "headline" if row["key"][1] == "0" else "food"
+        mon = labels.get(row["key"][2], row["key"][2])
+        try:
+            out.setdefault(mon, {})[grp] = float(row["values"][0])
+        except (TypeError, ValueError):
+            continue
+    return {m: v for m, v in out.items() if v}
+
+
+def load_ub(allow_fetch: bool = True) -> dict:
+    """Optional — the page falls back to the national anchor and says so if this is missing."""
+    if allow_fetch:
+        try:
+            u = fetch_ub()
+            if u:
+                UB_CACHE.write_text(json.dumps(u, ensure_ascii=False, indent=1),
+                                    encoding="utf-8")
+                return u
+        except Exception as e:
+            print(f"build: UB CPI fetch failed ({e}) — falling back to cache", file=sys.stderr)
+    if UB_CACHE.exists():
+        return json.loads(UB_CACHE.read_text(encoding="utf-8"))
+    return {}
 
 
 def yoy_of(s: dict, at: str) -> float | None:
@@ -637,7 +700,7 @@ def spark(s: dict, weeks: int = 13, w=104, h=28) -> str:
 # ---------------------------------------------------------------- render
 
 def render(series: dict, live: bool, official: dict, official_live: bool,
-           ledger: list, cal: dict | None, board: dict) -> str:
+           ledger: list, cal: dict | None, board: dict, ub: dict | None = None) -> str:
     weeks = sorted(series["beef_boneless"])
     as_of = weeks[-1]
     chart_from = weeks[-CHART_WEEKS] if len(weeks) >= CHART_WEEKS else weeks[0]
@@ -784,14 +847,46 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
     transport_note = (f", currently {pct(off_transport)} year on year"
                       if off_transport is not None else "")
 
+    # The right anchor for a survey of Ulaanbaatar prices is the Ulaanbaatar CPI, not the
+    # national one. Prefer it; fall back to national and say which is shown.
+    ub_m = max((m for m in (ub or {}) if (ub or {})[m].get("food") is not None), default=None)
+    if ub_m:
+        anchor_food, anchor_food_lbl = ub[ub_m]["food"], "Official UB food CPI · YoY"
+        anchor_src = (f"Last official print · {ub_m} · Ulaanbaatar city CPI, NSO table "
+                      f"DT_NSO_0600_012V1")
+    else:
+        anchor_food, anchor_food_lbl = off_food, "Official food CPI · YoY (national)"
+        anchor_src = anchor_note_txt
+
     anchors = ""
-    if off_food is not None:
-        anchors += (f'<div class="anchor"><div class="anchor-l">Official food CPI · YoY</div>'
-                    f'<div class="anchor-v">{off_food:.1f}%</div></div>')
+    if anchor_food is not None:
+        anchors += (f'<div class="anchor"><div class="anchor-l">{anchor_food_lbl}</div>'
+                    f'<div class="anchor-v">{anchor_food:.1f}%</div></div>')
     if off_head is not None:
         anchors += (f'<div class="anchor"><div class="anchor-l">Headline CPI · YoY</div>'
                     f'<div class="anchor-v">{off_head:.1f}%</div></div>')
-    anchor_note = anchor_note_txt
+    anchor_note = anchor_src
+
+    # How our basket compares to the official WEIGHTED meat index. Our figure is an unweighted
+    # mean of four raw cuts surveyed in Ulaanbaatar, so it sits above a weighted national index
+    # that also contains processed meat products. Say so, rather than let the reader assume the
+    # hero number is the official meat rate.
+    basket_caveat = ""
+    if MEAT_REFERENCE:
+        ours_ref, n_ref = basket_month_stats(series, MEAT_REFERENCE["month"])
+        if ours_ref is not None:
+            basket_caveat = (
+                f'<div class="callout" style="border-left-color:var(--amber)">'
+                f'<b>This basket is not the official meat rate, and runs above it.</b> '
+                f'For {MEAT_REFERENCE["month"]} this page\'s basket averaged '
+                f'{ours_ref:+.1f}% while the official weighted meat index was '
+                f'{MEAT_REFERENCE["yoy_pct"]:+.1f}% — we sit '
+                f'{ours_ref - MEAT_REFERENCE["yoy_pct"]:+.1f}pp above it. Two reasons, both '
+                f'by construction: our four cuts are averaged <b>unweighted</b>, so goat and '
+                f'mutton carry the same weight as beef despite far smaller consumption '
+                f'shares; and we track <b>raw cuts surveyed in Ulaanbaatar</b> while the '
+                f'official index is national and includes processed meat products. '
+                f'Reference: {MEAT_REFERENCE["source"]}.</div>')
 
     board_row = ""
     if board["board_value"] is not None and board["board_week"] and board["board_week"] != as_of:
@@ -1096,6 +1191,7 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
 </section>
 
 <section class="wrap">
+  {basket_caveat}
   <div class="panel">
     <table>
       <caption class="lbl">The basket · week {as_of}</caption>
@@ -1211,6 +1307,7 @@ def main() -> None:
     allow = "--no-fetch" not in sys.argv
     series, live = load_series(allow_fetch=allow)
     official, official_live = load_official(allow_fetch=allow)
+    ub = load_ub(allow_fetch=allow)
     board = read_board()
     if "--emit-anchors" in sys.argv and board["beef_anchor"] and board["beef_anchor_month"]:
         ANCHORS.write_text(json.dumps({
@@ -1222,7 +1319,7 @@ def main() -> None:
               f"next print {board['next_print']}")
     cal = calibrate(series, official)
     ledger = update_ledger(series, official, cal, board["next_print"], date.today())
-    html = render(series, live, official, official_live, ledger, cal, board)
+    html = render(series, live, official, official_live, ledger, cal, board, ub)
     OUT.write_text(html, encoding="utf-8")
 
     weeks = sorted(series["beef_boneless"])
