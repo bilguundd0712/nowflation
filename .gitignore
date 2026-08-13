@@ -1,6 +1,7 @@
 MONETIZATION_VERDICT.md
 OUTREACH_CHECKLIST.md
 TESTS.md
+NOWFLATION_CONTEXT.md
 # The backtest of our own method is PUBLIC as of 2026-07-22 — see BACKTEST_FINDINGS.md.
 # Anyone can re-run backtest.py against the cached inputs and check our grading.
 __pycache__/

@@ -30,6 +30,7 @@ Run: python build_nowflation.py   [--no-fetch]   (writes index.html beside this 
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import urllib.parse
@@ -43,7 +44,18 @@ CACHE = BASE / "series_cache.json"
 OFFICIAL_CACHE = BASE / "official_cpi_cache.json"
 LEDGER = BASE / "calls_ledger.json"
 OUT = BASE / "index.html"
-BOARD = BASE.parent / "stele_thresholds.json"
+# The private STELE board is NOT in this repo and lives wherever the owner keeps it. Searched
+# in order; first hit wins; absent is fine (anchors.json below covers CI). Set STELE_BOARD to
+# override. Never hard-code a single relative path here — the repo has already moved once.
+BOARD = next(
+    (p for p in [
+        Path(os.environ["STELE_BOARD"]) if os.environ.get("STELE_BOARD") else None,
+        BASE / "stele_thresholds.json",
+        BASE.parent / "stele_thresholds.json",
+        Path.home() / "Downloads" / "stele_thresholds.json",
+    ] if p and p.exists()),
+    BASE / "stele_thresholds.json",  # non-existent sentinel → anchors.json path
+)
 # Public-fact snapshot for CI: next print date + the CPI report's beef average. The private
 # STELE board never leaves the owner's machine; this file ships in the repo instead.
 # Regenerate with --emit-anchors on a machine that has the board.
@@ -106,6 +118,19 @@ C = {  # Sovereign Ledger palette
 
 # ---------------------------------------------------------------- data
 
+def norm_week(label: str) -> str | None:
+    """NSO week labels are usually ISO but NOT always — the aimag table (DT_NSO_0300_010V5)
+    has emitted '2026-8-10' for 2026-08-10. This table is clean today, but it is the same
+    office and the same habit, and an unpadded month would break every string comparison
+    downstream ('2026-09-07' < '2026-8-10'), silently freezing the page on a stale week.
+    Normalise on ingest rather than trusting the label."""
+    try:
+        y, m, d = (int(x) for x in str(label).strip().split("-"))
+        return date(y, m, d).isoformat()
+    except (ValueError, TypeError):
+        return None
+
+
 def fetch_series(weeks: int = 185) -> dict:
     meta = requests.get(URL, timeout=40).json()
     tv = next(v for v in meta["variables"] if v["code"] == "Хугацаа")
@@ -120,12 +145,13 @@ def fetch_series(weeks: int = 185) -> dict:
     series: dict = {}
     for row in r.json()["data"]:
         name = ITEMS.get(row["key"][0])
+        wk = norm_week(dates.get(row["key"][1], row["key"][1]))
         try:
             val = float(row["values"][0])
         except (TypeError, ValueError):
             continue
-        if name:
-            series.setdefault(name, {})[dates.get(row["key"][1], row["key"][1])] = val
+        if name and wk:
+            series.setdefault(name, {})[wk] = val
     return series
 
 
@@ -659,7 +685,12 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
         badge_cls, badge_txt = "stale", "Weekly · awaiting publish"
 
     # The verdict is assembled from the figures, never hand-written.
-    if mom4 is not None and mom4 < 1.0 and yoy > AMBER_ABOVE:
+    if mom4 is not None and mom4 <= -1.0 and yoy > AMBER_ABOVE:
+        verdict = ("The level is still extreme, but prices are now falling week to week — the "
+                   "impulse has turned negative. This is what the beginning of the unwind looks "
+                   "like: the year-on-year figure stays high on base effects long after the "
+                   "prices themselves have started coming down.")
+    elif mom4 is not None and mom4 < 1.0 and yoy > AMBER_ABOVE:
         verdict = ("The spike is plateauing at altitude — the impulse has faded to near zero "
                    "while the level stays extreme. Prices stopped climbing; they never came down.")
     elif mom4 is not None and mom4 >= 3.0:
@@ -675,8 +706,10 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
     # The impulse must not read "calm" when it is re-accelerating — colour it by the value.
     if mom4 is None:
         imp_cls, imp_read = "cool", "no impulse reading"
+    elif mom4 <= -1.0:
+        imp_cls, imp_read = "cool", "FALLING — prices are below where they were four surveys ago"
     elif mom4 < 1.0:
-        imp_cls, imp_read = "cool", "FADING — the shock is passing through"
+        imp_cls, imp_read = "cool", "FLAT — the shock has stopped passing through"
     elif mom4 < 3.0:
         imp_cls, imp_read = "warm", "STILL RUNNING — slowed, not stopped"
     else:
@@ -816,7 +849,9 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
     correct: <a href="{note['report']}">{note['report']}</a> ·
     <a href="https://github.com/bilguundd0712/nowflation/blob/main/backtest.py">backtest.py</a>
   </div>"""
-    ledger_section = "" if not lrows else f"""
+    last_issued = max((c for c in ledger if c.get("type") != "methodology_note"),
+                      key=lambda c: (c["made_on"], c["id"]), default=None)
+    ledger_section = "" if not (lrows or note) else f"""
 <section class="wrap">
   <h2 class="lbl" style="margin-bottom:16px">Scored calls · dated before the print, graded after it</h2>
   {note_html}
@@ -834,7 +869,7 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
       A call is never edited after it is made — grading only appends the official figure from
       the same NSO table the prediction targets. Raw ledger:
       <a href="calls_ledger.json">calls_ledger.json</a>.
-      Method of the last call issued: {lrows and next(c for c in ledger if c.get('type') != 'methodology_note')['method']}.
+      {f"Method of the last call issued ({last_issued['id']}): {last_issued['method']}" if last_issued else ""}
     </div>
   </div>
 </section>"""
@@ -1034,7 +1069,7 @@ def render(series: dict, live: bool, official: dict, official_live: bool,
       <div class="cv level">{pct(yoy)}</div>
       <div class="cdesc">Where prices sit against a year ago. Stays high on base effects long
         after the shock itself has passed.</div>
-      <div class="readout">STATUS: {sev} — board gate: amber &gt;{AMBER_ABOVE:.0f}% · red &gt;{RED_ABOVE:.0f}%</div>
+      <div class="readout">STATUS: {sev} — gate: amber &gt;{AMBER_ABOVE:.0f}% · red &gt;{RED_ABOVE:.0f}%</div>
     </div>
     <div>
       <h3 class="lbl">Impulse · last 4 surveys{f' · {span_days} days' if span_days else ''}</h3>

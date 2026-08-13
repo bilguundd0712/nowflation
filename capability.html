@@ -46,35 +46,47 @@
 <header class="mast">
   <div class="wrap mast-in">
     <h1 class="brand">NOWFLATION<span>.MN</span> <span class="lbl">/ capability note</span></h1>
-    <div class="lbl"><a href="./">← the nowcast</a> · <a href="aimag.html">aimag demo</a></div>
+    <div class="lbl"><a href="./">← the monitor</a> · <a href="aimag.html">aimag demo</a></div>
   </div>
 </header>
 
 <main>
 <section class="wrap">
   <h2 class="lbl">What this is</h2>
-  <p>Nowflation.mn is an independent weekly read of Mongolian food and fuel prices, computed
-  from the National Statistics Office's own open weekly price survey and published ahead of
-  each monthly CPI print. Every figure is generated from the source tables at build time —
-  nothing is entered by hand — and every prediction we publish is dated, banded and graded
-  in public against the official release
-  (<a href="calls_ledger.json">the append-only calls ledger</a>).</p>
-  <p class="quiet">It is a nowcast, not an official statistic. It does not replace the NSO
-  consumer price index and makes no claim to reproduce it.</p>
+  <p>Nowflation.mn is an independent weekly measurement of Mongolian food and fuel prices,
+  computed from the National Statistics Office's own open weekly price survey. Every figure is
+  generated from the source tables at build time — nothing is entered by hand.</p>
+  <p>It measures on a weekly clock where the official consumer price index is monthly. That is
+  a timing difference, not a forecast: we tested whether this series predicts the official
+  print and found that it does not, and we
+  <a href="BACKTEST_FINDINGS.md">published that finding ourselves</a>, before our own first
+  prediction had even been graded. The
+  <a href="calls_ledger.json">append-only calls ledger</a> keeps every prediction we ever made,
+  including the one that outlived its own method.</p>
+  <p class="quiet">This is a measurement, not an official statistic. It does not replace the
+  NSO consumer price index and makes no claim to reproduce or to predict it.</p>
 </section>
 
 <section class="wrap">
   <h2 class="lbl">What already runs</h2>
   <ul>
-    <li><a href="./">The UB nowcast</a> — meat basket, flour and fuel, weekly, with
-      year-on-year, four-survey momentum, and the lead over the official print visualised.</li>
+    <li><a href="./">The UB monitor</a> — meat basket, flour and fuel, weekly, with
+      year-on-year, four-survey momentum, and administered fuel steps called out (A-92 moved
+      +9.7% in a single survey step; diesel was running +41% year on year in the week of
+      2026-08-10).</li>
     <li><a href="aimag.html">The aimag monitor (working demo)</a> — the same survey across
       all 21 aimags: beef, petrol, diesel and baled hay, against Ulaanbaatar. In the latest
-      week the same cut of beef varies more than 50% between aimags.</li>
-    <li><a href="calls_ledger.json">The scored-calls ledger</a> — every food-CPI prediction
-      dated before the release, graded automatically after it, never edited. The git history
-      of the <a href="https://github.com/bilguundd0712/nowflation">public repository</a>
-      is the tamper-evidence.</li>
+      week of 2026-08-10 the same cut of beef ranged 70% between the cheapest and dearest
+      aimag; the current figure is computed on the page itself.</li>
+    <li><a href="calls_ledger.json">The scored-calls ledger</a> — every prediction dated
+      before the release and graded after it, never edited, including the note recording why
+      new predictions are suspended. The git history of the
+      <a href="https://github.com/bilguundd0712/nowflation">public repository</a> is the
+      tamper-evidence for those dates.</li>
+    <li><a href="BACKTEST_FINDINGS.md">The audit of our own method</a> — the walk-forward
+      backtest, its cached inputs, every individual prediction and the two adversarial audit
+      scripts are all in the repository, so anyone can re-run them and check whether we graded
+      ourselves honestly.</li>
   </ul>
 </section>
 
@@ -91,8 +103,9 @@
       <p>The UB survey carries 31 products (dairy, vegetables, bread, eggs); the national
       CPI tables carry every CoICOP group monthly back to 1993. Custom cuts on request.</p></div>
     <div class="card"><h3>Methodology &amp; validation work</h3>
-      <p>Documented, reproducible pipelines on official open data, validated against the
-      official prints — the discipline this site runs on, applied to your series.</p></div>
+      <p>Documented, reproducible pipelines on official open data, with the walk-forward
+      testing that tells you whether a signal actually works — the discipline this site runs
+      on, applied to your series.</p></div>
   </div>
 </section>
 
@@ -103,8 +116,9 @@
       attributed on every page.</li>
     <li>Builds are deterministic and public where the deliverable is public; failed fetches
       degrade to cache and say so — a stale page that admits it beats a fresh-looking one.</li>
-    <li>Claims are falsifiable by design: predictions carry bands and grade themselves
-      against the official number.</li>
+    <li>Claims are falsifiable by design, and we run the falsification ourselves. When our
+      own forecast failed its backtest we published the failure, retired the claim, and left
+      the record standing rather than quietly editing it.</li>
   </ul>
 </section>
 

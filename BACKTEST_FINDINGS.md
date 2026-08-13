@@ -95,7 +95,8 @@ a complete answer to whether we should have been selling a forecast. We should n
    series.
 4. **The monitoring product is untouched** — and it was always the part with no model risk:
    weekly UB food and fuel prices, administered fuel steps (A-92 moved +9.7% in one survey step),
-   all 21 aimags (same-week beef ranged 56% between the cheapest and dearest aimag). These are
+   all 21 aimags (in the week of 2026-07-20, the same cut of beef ranged 56% between the
+   cheapest and dearest aimag — 70% three weeks later). These are
    measurements, not estimates. Nothing above weakens a single one of them.
 
 The backtest, its cached inputs and every individual prediction are in this repository. Anyone can

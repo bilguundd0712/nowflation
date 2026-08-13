@@ -74,6 +74,17 @@ SPECS = ("as_shipped", "horizon_matched", "persistence_plus")
 
 # ----------------------------------------------------------------- fetch
 
+def norm_week(label: str) -> str | None:
+    """Defensive: NSO's aimag table has emitted an unpadded '2026-8-10'. This table is clean,
+    but an unpadded month would break every string comparison below, so normalise on ingest.
+    A no-op on already-ISO labels, so published backtest numbers are unaffected."""
+    try:
+        y, m, d = (int(x) for x in str(label).strip().split("-"))
+        return date(y, m, d).isoformat()
+    except (ValueError, TypeError):
+        return None
+
+
 def _post(url: str, body: dict) -> dict:
     r = requests.post(url, json=body, timeout=120)
     r.raise_for_status()
@@ -95,10 +106,11 @@ def fetch_weekly() -> dict:
             val = float(row["values"][0])
         except (TypeError, ValueError):
             continue
-        if name:
+        wk = norm_week(labels.get(row["key"][1], row["key"][1]))
+        if name and wk:
             lo, hi = BOUNDS[name]
             if lo <= val <= hi:
-                out.setdefault(name, {})[labels.get(row["key"][1], row["key"][1])] = val
+                out.setdefault(name, {})[wk] = val
     return out
 
 

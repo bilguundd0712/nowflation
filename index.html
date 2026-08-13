@@ -161,9 +161,9 @@
       <div class="lbl" style="margin-top:4px">Ulaanbaatar food &amp; fuel prices · measured weekly, not forecast</div>
     </div>
     <div class="cadence">
-      <span class="badge ok">Weekly · current</span>
+      <span class="badge stale">Cached · live fetch failed</span>
       <span class="badge">Data week 2026-08-10</span>
-      <span class="badge">2 days old</span>
+      <span class="badge">3 days old</span>
     </div>
   </div>
 </header>
@@ -182,7 +182,7 @@
       <div class="anchor-note">Last official print · 2026-07 · NSO table DT_NSO_0600_010V1</div>
     </div>
   </div>
-  <p class="verdict">"The spike is plateauing at altitude — the impulse has faded to near zero while the level stays extreme. Prices stopped climbing; they never came down."</p>
+  <p class="verdict">"The level is still extreme, but prices are now falling week to week — the impulse has turned negative. This is what the beginning of the unwind looks like: the year-on-year figure stays high on base effects long after the prices themselves have started coming down."</p>
 </section>
 
 <section class="wrap">
@@ -193,7 +193,7 @@
       <div class="cv level">+58.3%</div>
       <div class="cdesc">Where prices sit against a year ago. Stays high on base effects long
         after the shock itself has passed.</div>
-      <div class="readout">STATUS: SEVERE — board gate: amber &gt;25% · red &gt;40%</div>
+      <div class="readout">STATUS: SEVERE — gate: amber &gt;25% · red &gt;40%</div>
     </div>
     <div>
       <h3 class="lbl">Impulse · last 4 surveys · 35 days</h3>
@@ -201,7 +201,7 @@
       <div class="cdesc">What prices are doing right now. This is the number that turns first —
         the bars below are the last 26 surveys of it.</div>
       <div class="scrollx" style="margin-top:14px"><svg viewBox="0 0 560 150" class="chart" role="img" aria-label="4-week momentum of the meat basket, last 26 weeks"><line x1="40" x2="546" y1="94.1" y2="94.1" stroke="#888888" stroke-dasharray="2,3" opacity="0.7"/><text x="32" y="98.1" class="ax" text-anchor="end">0%</text><text x="32" y="22" class="ax" text-anchor="end">20%</text><rect x="34.6" y="64.0" width="10.7" height="30.1" fill="#ffb3ad" opacity="0.85"/><rect x="54.9" y="72.6" width="10.7" height="21.5" fill="#ffb3ad" opacity="0.85"/><rect x="75.1" y="79.2" width="10.7" height="14.9" fill="#ffb3ad" opacity="0.85"/><rect x="95.4" y="78.4" width="10.7" height="15.7" fill="#ffb3ad" opacity="0.85"/><rect x="115.6" y="70.2" width="10.7" height="23.9" fill="#ffb3ad" opacity="0.85"/><rect x="135.8" y="67.9" width="10.7" height="26.2" fill="#ffb3ad" opacity="0.85"/><rect x="156.1" y="65.5" width="10.7" height="28.6" fill="#ffb3ad" opacity="0.85"/><rect x="176.3" y="70.2" width="10.7" height="23.9" fill="#ffb3ad" opacity="0.85"/><rect x="196.6" y="63.6" width="10.7" height="30.5" fill="#ffb3ad" opacity="0.85"/><rect x="216.8" y="60.8" width="10.7" height="33.3" fill="#ffb3ad" opacity="0.85"/><rect x="237.0" y="56.9" width="10.7" height="37.2" fill="#ffb3ad" opacity="0.85"/><rect x="257.3" y="30.3" width="10.7" height="63.8" fill="#ffb3ad" opacity="0.85"/><rect x="277.5" y="38.5" width="10.7" height="55.6" fill="#ffb3ad" opacity="0.85"/><rect x="297.8" y="45.9" width="10.7" height="48.2" fill="#ffb3ad" opacity="0.85"/><rect x="318.0" y="43.2" width="10.7" height="50.9" fill="#ffb3ad" opacity="0.85"/><rect x="338.2" y="65.5" width="10.7" height="28.6" fill="#ffb3ad" opacity="0.85"/><rect x="358.5" y="62.0" width="10.7" height="32.1" fill="#ffb3ad" opacity="0.85"/><rect x="378.7" y="67.5" width="10.7" height="26.6" fill="#ffb3ad" opacity="0.85"/><rect x="399.0" y="79.2" width="10.7" height="14.9" fill="#ffb3ad" opacity="0.85"/><rect x="419.2" y="80.0" width="10.7" height="14.1" fill="#ffb3ad" opacity="0.85"/><rect x="439.4" y="93.3" width="10.7" height="1.0" fill="#1fccc6" opacity="0.85"/><rect x="459.7" y="86.3" width="10.7" height="7.8" fill="#1fccc6" opacity="0.85"/><rect x="479.9" y="83.1" width="10.7" height="11.0" fill="#1fccc6" opacity="0.85"/><rect x="500.2" y="94.1" width="10.7" height="11.4" fill="#4fe8e2" opacity="0.85"/><rect x="520.4" y="94.1" width="10.7" height="4.7" fill="#4fe8e2" opacity="0.85"/><rect x="540.6" y="94.1" width="10.7" height="17.6" fill="#4fe8e2" opacity="0.85"/><text x="40" y="144" class="ax">26-02</text><text x="546" y="144" class="ax" text-anchor="end">26-08</text></svg></div>
-      <div class="readout">READING: FADING — the shock is passing through</div>
+      <div class="readout">READING: FALLING — prices are below where they were four surveys ago</div>
     </div>
   </div>
 </section>
@@ -383,7 +383,7 @@
       A call is never edited after it is made — grading only appends the official figure from
       the same NSO table the prediction targets. Raw ledger:
       <a href="calls_ledger.json">calls_ledger.json</a>.
-      Method of the last call issued: OLS food-YoY ~ meat-basket-YoY over 30 months since 2024-01 (R²=0.84, RMSE=1.9pp); band = max(1, 2×RMSE); made with 2 survey weeks of the target month observed.
+      Method of the last call issued (2026-07#w2): OLS food-YoY ~ meat-basket-YoY over 30 months since 2024-01 (R²=0.84, RMSE=1.9pp); band = max(1, 2×RMSE); made with 2 survey weeks of the target month observed
     </div>
   </div>
 </section>
@@ -398,7 +398,7 @@
           <dt>Source ·</dt><dd> National Statistics Office of Mongolia, weekly Ulaanbaatar
             price survey, PXWeb table DT_NSO_0600_001V4; official monthly CPI by group,
             table DT_NSO_0600_010V1, base 2023=100 (both data.1212.mn)</dd>
-          <dt>Data week ·</dt><dd> 2026-08-10 — 2 days old at render</dd>
+          <dt>Data week ·</dt><dd> 2026-08-10 — 3 days old at render</dd>
           <dt>Cadence ·</dt><dd> weekly reference periods, published on the statistics
             office's own schedule; gaps around public holidays are real, not missing data</dd>
           <dt>Method ·</dt><dd> year on year against the last surveyed week on or before the
@@ -410,7 +410,7 @@
           <dt>Namesake ·</dt><dd> the name nods to <a href="https://nowflation.com">nowflation.com</a>,
             Steven Fiorillo's daily US inflation gauge, which inspired this page — the two
             projects are otherwise unrelated</dd>
-          <dt>Rendered ·</dt><dd> 2026-08-12; weekly survey live; official CPI table live</dd>
+          <dt>Rendered ·</dt><dd> 2026-08-13; weekly survey from cache — the live fetch failed; official CPI table from cache</dd>
         </dl>
         <p class="disclaim">This is a nowcast, not an official statistic. It tracks a narrow
         basket of Ulaanbaatar retail prices and is published ahead of, and independently of,
@@ -421,7 +421,7 @@
         <h3 class="lbl">What this claims — and what it doesn't</h3>
         <p class="disclaim" style="margin-top:12px"><b>It claims measurement, not prediction.</b>
         These prices are surveyed weekly; the consumer price index is published monthly, so
-        on the chart above the shaded band is the 2 weeks of price data the last official print does not yet contain.
+        on the chart above the shaded band is the 2 weeks of price data the last official print does not yet contain — the next print is due 2026-09-10.
         That is a calendar advantage, and it is real. It is <b>not</b> a forecast: we tested
         whether this series predicts the official print and found it does not — correlation
         peaks contemporaneously and decays with lead, so it moves <i>with</i> food CPI rather

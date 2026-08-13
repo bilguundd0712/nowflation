@@ -1,7 +1,12 @@
 # nowflation.mn
 
-Weekly nowcast of Ulaanbaatar food prices, computed from the National Statistics Office of
-Mongolia's own weekly price survey — published ahead of each monthly CPI print.
+Weekly measurement of Ulaanbaatar food and fuel prices, computed from the National Statistics
+Office of Mongolia's own weekly price survey — published on a weekly clock, where the official
+consumer price index is monthly.
+
+**We tested whether this series predicts the official print. It does not** — see
+[BACKTEST_FINDINGS.md](BACKTEST_FINDINGS.md), published before our own first prediction was
+graded. The forecast claim is retired; the measurement stands.
 
 ## How it works
 

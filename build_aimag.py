@@ -56,6 +56,19 @@ C = {"bg": "#0A0A0A", "surface": "#141414", "surface_hi": "#1c1b1b", "text": "#F
      "red_bg": "#a40217", "amber": "#ffc8a1"}
 
 
+def norm_week(label: str) -> str | None:
+    """NSO week labels are usually ISO but NOT always — this table has emitted '2026-8-10'
+    for 2026-08-10 (1 label in 60). An unpadded month breaks string sorting the moment a
+    zero-padded later month arrives ('2026-09-07' < '2026-8-10'), which would silently
+    freeze the page on a stale week and corrupt the year-ago base lookup. Normalise on
+    ingest so every downstream string comparison is safe."""
+    try:
+        y, m, d = (int(x) for x in str(label).strip().split("-"))
+        return date(y, m, d).isoformat()
+    except (ValueError, TypeError):
+        return None
+
+
 def fetch(weeks: int = 60) -> dict:
     meta = requests.get(URL, timeout=40).json()
     tv = next(v for v in meta["variables"] if v["code"] == "Хугацаа")
@@ -73,7 +86,9 @@ def fetch(weeks: int = 60) -> dict:
     for row in r.json()["data"]:
         prod = PRODUCTS.get(row["key"][0])
         geo_c = row["key"][1]
-        wk = labels.get(row["key"][2], row["key"][2])
+        wk = norm_week(labels.get(row["key"][2], row["key"][2]))
+        if wk is None:
+            continue
         try:
             val = float(row["values"][0])
         except (TypeError, ValueError):
@@ -114,7 +129,6 @@ def latest(s: dict) -> tuple[str, float] | None:
     if not s:
         return None
     d = sorted(s)[-1]
-    lo, hi = 0, 10 ** 9
     return (d, s[d])
 
 
@@ -261,7 +275,8 @@ def render(data: dict, live: bool) -> str:
   <div class="wrap mast-in">
     <div>
       <h1 class="brand">NOWFLATION<span>.MN</span> <span class="lbl">/ aimag monitor</span></h1>
-      <div class="lbl" style="margin-top:4px"><a href="./">← back to the nowcast</a></div>
+      <div class="lbl" style="margin-top:4px"><a href="./">← back to the UB monitor</a> ·
+        <a href="capability.html">capability note</a></div>
     </div>
     <div>
       <span class="badge">Data week {as_of}</span>
@@ -282,7 +297,8 @@ def render(data: dict, live: bool) -> str:
   <p class="spreadline">{spread}</p>
   <div class="panel">
     <table>
-      <caption class="lbl">Beef bone-in ₮/kg (with YoY) · A-92 ₮/L · diesel ₮/L · hay ₮/bale (with YoY)</caption>
+      <caption class="lbl">Beef bone-in ₮/kg (with YoY) · A-92 ₮/L · diesel ₮/L ·
+        baled hay ₮ per bale* (with YoY)</caption>
       <thead><tr>
         <th scope="col">Aimag · <span lang="mn">Аймаг</span></th>
         <th scope="col">Beef, bone-in</th><th scope="col">Petrol A-92</th>
@@ -300,6 +316,9 @@ def render(data: dict, live: bool) -> str:
     DT_NSO_0300_010V5 (data.1212.mn), CC BY 4.0 · Ulaanbaatar row from table
     DT_NSO_0600_001V4 · Rendered {today.isoformat()} · Missing cells are weeks the survey
     did not report for that aimag — shown as gaps, never interpolated.
+    <br>* The source publishes hay as "<span lang="mn">Боодолтой өвс</span>" with no explicit
+    unit, unlike the other items; the magnitudes indicate a price per bale. Every other column
+    carries the unit the source states.
   </div>
 </footer>
 </body>
